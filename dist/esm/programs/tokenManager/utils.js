@@ -24,6 +24,7 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
+import { TOKEN_MANAGER_ADDRESS } from ".";
 import {
   CRANK_KEY,
   InvalidationType,
@@ -284,7 +285,7 @@ export const withRemainingAccountsForReturn = async (
     state === TokenManagerState.Issued
   ) {
     if (kind === TokenManagerKind.Programmable || rulesetId) {
-      if (!rulesetId) throw "Ruleset not specified";
+      // if (!rulesetId) throw "Ruleset not specified";
       if (!recipientTokenAccountOwnerId)
         throw "Recipient token account owner not specified";
       const remainingAccounts = [];
@@ -504,7 +505,10 @@ export const remainingAccountForProgrammable = (
       isWritable: false,
     },
     {
-      pubkey: rulesetId,
+      pubkey:
+        rulesetId !== null && rulesetId !== void 0
+          ? rulesetId
+          : TOKEN_MANAGER_ADDRESS,
       isSigner: false,
       isWritable: false,
     },

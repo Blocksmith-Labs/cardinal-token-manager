@@ -3,7 +3,7 @@ import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import type { AccountMeta, Connection } from "@solana/web3.js";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import type { TokenManagerData } from ".";
+import { TokenManagerData } from ".";
 import { TokenManagerKind } from ".";
 export declare const getRemainingAccountsForKind: (mintId: PublicKey, tokenManagerKind: TokenManagerKind) => AccountMeta[];
 export declare const getRemainingAccountsForUnissue: (tokenManagerId: PublicKey, tokenManagerData: TokenManagerData, metadata: Metadata | null) => AccountMeta[];
@@ -19,7 +19,7 @@ export declare const getRemainingAccountsForInvalidate: (connection: Connection,
 export declare const withRemainingAccountsForInvalidate: (transaction: Transaction, connection: Connection, wallet: Wallet, mintId: PublicKey, tokenManagerData: AccountData<TokenManagerData>, recipientTokenAccountOwnerId: PublicKey, metadata: Metadata | null) => Promise<AccountMeta[]>;
 export declare const withRemainingAccountsForReturn: (transaction: Transaction, connection: Connection, wallet: Wallet, tokenManagerData: AccountData<TokenManagerData>, recipientTokenAccountOwnerId?: PublicKey, rulesetId?: PublicKey) => Promise<AccountMeta[]>;
 export declare const getRemainingAccountsForTransfer: (transferAuthority: PublicKey | null, tokenManagerId: PublicKey) => AccountMeta[];
-export declare const remainingAccountForProgrammable: (mintId: PublicKey, fromTokenAccountId: PublicKey, toTokenAccountId: PublicKey, rulesetId: PublicKey) => AccountMeta[];
+export declare const remainingAccountForProgrammable: (mintId: PublicKey, fromTokenAccountId: PublicKey, toTokenAccountId: PublicKey, rulesetId: PublicKey | undefined) => AccountMeta[];
 export declare const remainingAccountForProgrammableUnlockAndTransfer: (recipient: PublicKey, payer: PublicKey, mintId: PublicKey, fromTokenAccountId: PublicKey, rulesetId: PublicKey) => AccountMeta[];
 export declare const getRemainingAccountsForIssue: (tokenManagerKind: TokenManagerKind, mintId: PublicKey, issuerTokenAccountId: PublicKey, tokenManagerTokenAccountId: PublicKey, rulesetId?: PublicKey) => AccountMeta[];
 export declare const getRemainingAccountsForClaim: (tokenManagerData: AccountData<TokenManagerData>, recipientTokenAccountId: PublicKey, metadata: Metadata | null, claimReceiptId?: PublicKey) => AccountMeta[];

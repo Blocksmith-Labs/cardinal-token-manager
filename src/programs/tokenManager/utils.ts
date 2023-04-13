@@ -33,6 +33,7 @@ import type { TokenManagerData } from ".";
 import {
   CRANK_KEY,
   InvalidationType,
+  TOKEN_MANAGER_ADDRESS,
   TOKEN_MANAGER_IDL,
   TokenManagerKind,
   TokenManagerState,
@@ -258,7 +259,7 @@ export const withRemainingAccountsForReturn = async (
     state === TokenManagerState.Issued
   ) {
     if (kind === TokenManagerKind.Programmable || rulesetId) {
-      if (!rulesetId) throw "Ruleset not specified";
+      // if (!rulesetId) throw "Ruleset not specified";
       if (!recipientTokenAccountOwnerId)
         throw "Recipient token account owner not specified";
       const remainingAccounts: AccountMeta[] = [];
@@ -436,7 +437,7 @@ export const remainingAccountForProgrammable = (
   mintId: PublicKey,
   fromTokenAccountId: PublicKey,
   toTokenAccountId: PublicKey,
-  rulesetId: PublicKey
+  rulesetId: PublicKey | undefined
 ): AccountMeta[] => {
   return [
     {
@@ -480,7 +481,7 @@ export const remainingAccountForProgrammable = (
       isWritable: false,
     },
     {
-      pubkey: rulesetId,
+      pubkey: rulesetId ?? TOKEN_MANAGER_ADDRESS,
       isSigner: false,
       isWritable: false,
     },
