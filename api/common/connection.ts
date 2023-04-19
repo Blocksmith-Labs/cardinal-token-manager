@@ -3,16 +3,12 @@ import { Connection } from "@solana/web3.js";
 const networkURLs: { [key: string]: { primary: string; secondary?: string } } =
   {
     ["mainnet-beta"]: {
-      primary:
-        process.env.MAINNET_PRIMARY ||
-        "https://explorer-api.mainnet-beta.solana.com/",
-      secondary: "https://explorer-api.mainnet-beta.solana.com/",
+      primary: process.env.MAINNET_PRIMARY || "https://ssc-dao.genesysgo.net/",
+      secondary: "https://ssc-dao.genesysgo.net/",
     },
     mainnet: {
-      primary:
-        process.env.MAINNET_PRIMARY ||
-        "https://explorer-api.mainnet-beta.solana.com/",
-      secondary: "https://explorer-api.mainnet-beta.solana.com/",
+      primary: process.env.MAINNET_PRIMARY || "https://ssc-dao.genesysgo.net/",
+      secondary: "https://ssc-dao.genesysgo.net/",
     },
     devnet: { primary: "https://api.devnet.solana.com/" },
     testnet: { primary: "https://api.testnet.solana.com/" },

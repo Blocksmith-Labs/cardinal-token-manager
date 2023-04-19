@@ -4,3 +4,5 @@ export * from "./marketplace";
 export * as programs from "./programs";
 export * as rentals from "./rentals";
 export * from "./transaction";
+export * from "./utils";
+export * as wrappedSol from "./wrappedSol";

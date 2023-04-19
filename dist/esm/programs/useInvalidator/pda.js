@@ -5,10 +5,7 @@ import { USE_INVALIDATOR_ADDRESS, USE_INVALIDATOR_SEED } from "./constants";
  * Finds the use invalidator for this token manager.
  * @returns
  */
-export const findUseInvalidatorAddress = (tokenManagerId) => {
-  return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode(USE_INVALIDATOR_SEED), tokenManagerId.toBuffer()],
-    USE_INVALIDATOR_ADDRESS
-  )[0];
+export const findUseInvalidatorAddress = async (tokenManagerId) => {
+    return await PublicKey.findProgramAddress([utils.bytes.utf8.encode(USE_INVALIDATOR_SEED), tokenManagerId.toBuffer()], USE_INVALIDATOR_ADDRESS);
 };
 //# sourceMappingURL=pda.js.map

@@ -1,21 +1,24 @@
 import {
-  createMintIxs,
-  findMintEditionId,
-  findMintMetadataId,
-} from "@cardinal/common";
-import {
-  createCreateMasterEditionV3Instruction,
-  createCreateMetadataAccountV3Instruction,
+  CreateMasterEditionV3,
+  CreateMetadataV2,
+  Creator,
+  DataV2,
+  MasterEdition,
+  Metadata,
 } from "@metaplex-foundation/mpl-token-metadata";
 import { BN, utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import type { PublicKey } from "@solana/web3.js";
 import {
   Keypair,
   sendAndConfirmRawTransaction,
   Transaction,
 } from "@solana/web3.js";
-
 import { connectionFor } from "./connection";
+import * as dotenv from "dotenv";
+import { createMintTransaction } from "./utils";
+
+dotenv.config();
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_KEY || "")
@@ -26,7 +29,7 @@ const METADATA_URI =
 
 export const airdropMasterEdition = async (
   metadataUrl: string = METADATA_URI,
-  num = 1,
+  num: number = 1,
   cluster = "devnet",
   startNum = 0
 ) => {
@@ -43,71 +46,67 @@ export const airdropMasterEdition = async (
     try {
       const masterEditionTransaction = new Transaction();
       const masterEditionMint = Keypair.generate();
-      const [ixs] = await createMintIxs(
+      await createMintTransaction(
+        masterEditionTransaction,
         connection,
+        new SignerWallet(wallet),
+        wallet.publicKey,
         masterEditionMint.publicKey,
-        wallet.publicKey
+        1
       );
-      masterEditionTransaction.instructions = [
-        ...masterEditionTransaction.instructions,
-        ...ixs,
-      ];
 
-      const masterEditionMetadataId = findMintMetadataId(
+      const masterEditionMetadataId = await Metadata.getPDA(
         masterEditionMint.publicKey
       );
-      const metadataIx = createCreateMetadataAccountV3Instruction(
+      const metadataTx = new CreateMetadataV2(
+        { feePayer: wallet.publicKey },
         {
           metadata: masterEditionMetadataId,
+          metadataData: new DataV2({
+            name: `Test #${counter}`,
+            symbol: "TEST",
+            uri: metadataUrl,
+            sellerFeeBasisPoints: 0,
+            creators: [
+              new Creator({
+                address: wallet.publicKey.toString(),
+                verified: true,
+                share: 100,
+              }),
+            ],
+            collection: null,
+            uses: null,
+          }),
           updateAuthority: wallet.publicKey,
           mint: masterEditionMint.publicKey,
           mintAuthority: wallet.publicKey,
-          payer: wallet.publicKey,
-        },
-        {
-          createMetadataAccountArgsV3: {
-            data: {
-              name: `Test #${counter}`,
-              symbol: "TEST",
-              uri: metadataUrl,
-              sellerFeeBasisPoints: 0,
-              creators: [
-                {
-                  address: wallet.publicKey,
-                  verified: true,
-                  share: 100,
-                },
-              ],
-              collection: null,
-              uses: null,
-            },
-            isMutable: true,
-            collectionDetails: null,
-          },
         }
       );
-      const masterEditionId = findMintEditionId(masterEditionMint.publicKey);
-      const masterEditionIx = createCreateMasterEditionV3Instruction(
+
+      const masterEditionId = await MasterEdition.getPDA(
+        masterEditionMint.publicKey
+      );
+      const masterEditionTx = new CreateMasterEditionV3(
+        {
+          feePayer: wallet.publicKey,
+          recentBlockhash: (await connection.getRecentBlockhash("max"))
+            .blockhash,
+        },
         {
           edition: masterEditionId,
           metadata: masterEditionMetadataId,
           updateAuthority: wallet.publicKey,
           mint: masterEditionMint.publicKey,
           mintAuthority: wallet.publicKey,
-          payer: wallet.publicKey,
-        },
-        {
-          createMasterEditionArgs: {
-            maxSupply: new BN(0),
-          },
+          maxSupply: new BN(0),
         }
       );
 
       const transaction = new Transaction();
       transaction.instructions = [
         ...masterEditionTransaction.instructions,
-        metadataIx,
-        masterEditionIx,
+        ...metadataTx.instructions,
+        ...masterEditionTx.instructions,
       ];
       transaction.feePayer = wallet.publicKey;
       transaction.recentBlockhash = (

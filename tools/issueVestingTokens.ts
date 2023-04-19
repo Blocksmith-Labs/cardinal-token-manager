@@ -1,28 +1,25 @@
-import { findAta, getBatchedMultipleAccounts } from "@cardinal/common";
-import { utils, Wallet } from "@project-serum/anchor";
-import type {
-  AccountInfo,
-  ParsedAccountData,
-  Transaction,
-} from "@solana/web3.js";
+import { utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import {
+  AccountInfo,
   Keypair,
+  ParsedAccountData,
   PublicKey,
   sendAndConfirmRawTransaction,
+  Transaction,
 } from "@solana/web3.js";
-import * as dotenv from "dotenv";
-
-import { issueToken } from "../src";
+import { findAta, issueToken } from "../src";
 import {
   InvalidationType,
   TokenManagerKind,
 } from "../src/programs/tokenManager";
-import { findTokenManagerAddress } from "../src/programs/tokenManager/pda";
 import { connectionFor } from "./connection";
-
+import * as dotenv from "dotenv";
+import { findTokenManagerAddress } from "../src/programs/tokenManager/pda";
+import { getBatchedMultipleAccounts } from "@cardinal/common";
 dotenv.config();
 
-const wallet = new Wallet(
+const wallet = new SignerWallet(
   Keypair.fromSecretKey(utils.bytes.bs58.decode(process.env.AIRDROP_KEY || ""))
 );
 
@@ -49,10 +46,12 @@ export const issueVestingTokens = async (cluster = "mainnet") => {
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]!;
 
-    const tokenManagerIds = chunk.map(({ mint }) => {
-      const tmid = findTokenManagerAddress(mint);
-      return tmid;
-    });
+    const tokenManagerIds = await Promise.all(
+      chunk.map(async ({ mint }) => {
+        const [tmid] = await findTokenManagerAddress(mint);
+        return tmid;
+      })
+    );
     const accounts = await getBatchedMultipleAccounts(
       connection,
       tokenManagerIds
@@ -83,7 +82,7 @@ export const issueVestingTokens = async (cluster = "mainnet") => {
               },
             });
           } else {
-            console.log(`[skip] ${r.mint.toString()}`);
+            console.log(`[skip] ${r.mint}`);
           }
           return transaction;
         })

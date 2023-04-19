@@ -9,7 +9,6 @@
     "moduleResolution": "node",
     "lib": ["es2015"],
     "rootDir": "./",
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "esModuleInterop": true
   }
 }

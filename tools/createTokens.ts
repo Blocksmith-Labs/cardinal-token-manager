@@ -1,9 +1,10 @@
-import { createMintIxs, executeTransaction } from "@cardinal/common";
-import { utils, Wallet } from "@project-serum/anchor";
+import { utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import type { PublicKey } from "@solana/web3.js";
 import { Keypair, Transaction } from "@solana/web3.js";
-
 import { connectionFor } from "./connection";
+
+import { createMintTransaction, executeTransaction } from "./utils";
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_KEY || "")
@@ -29,12 +30,15 @@ const createTokens = async (
     const mintSigners: Keypair[] = [];
     for (let j = 0; j < BATCH_SIZE; j++) {
       const mintKeypair = Keypair.generate();
-      const [ixs] = await createMintIxs(
+      await createMintTransaction(
+        transaction,
         connection,
+        new SignerWallet(wallet),
+        wallet.publicKey,
         mintKeypair.publicKey,
+        1,
         wallet.publicKey
       );
-      transaction.instructions = [...transaction.instructions, ...ixs];
       mintsInTx.push(mintKeypair.publicKey);
       allMints.push(mintKeypair.publicKey);
       mintSigners.push(mintKeypair);
@@ -43,8 +47,8 @@ const createTokens = async (
     try {
       const txid = await executeTransaction(
         connection,
+        new SignerWallet(wallet),
         transaction,
-        new Wallet(wallet),
         {
           signers: mintSigners,
         }
@@ -66,12 +70,15 @@ const createTokens = async (
   );
   for (let i = 0; i < remainder; i++) {
     const mintKeypair = Keypair.generate();
-    const [ixs] = await createMintIxs(
+    await createMintTransaction(
+      transaction,
       connection,
+      new SignerWallet(wallet),
+      wallet.publicKey,
       mintKeypair.publicKey,
+      1,
       wallet.publicKey
     );
-    transaction.instructions = [...transaction.instructions, ...ixs];
     mintsInTx.push(mintKeypair.publicKey);
     allMints.push(mintKeypair.publicKey);
     mintSigners.push(mintKeypair);
@@ -80,8 +87,8 @@ const createTokens = async (
   try {
     const txid = await executeTransaction(
       connection,
+      new SignerWallet(wallet),
       transaction,
-      new Wallet(wallet),
       { signers: mintSigners }
     );
     console.log(

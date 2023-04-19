@@ -1,14 +1,15 @@
-import { executeTransaction, tryGetAccount } from "@cardinal/common";
-import { utils, Wallet } from "@project-serum/anchor";
+import * as anchor from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import { PublicKey } from "@solana/web3.js";
 import * as web3Js from "@solana/web3.js";
 
-import { withUpdateMarketplace } from "../src";
-import { getMarketplaceByName } from "../src/programs/transferAuthority/accounts";
+import { executeTransaction } from "./utils";
+import { tryGetAccount, withUpdateMarketplace } from "../src";
 import { connectionFor } from "./connection";
+import { getMarketplaceByName } from "../src/programs/transferAuthority/accounts";
 
 const wallet = web3Js.Keypair.fromSecretKey(
-  utils.bytes.bs58.decode(utils.bytes.bs58.encode([]))
+  anchor.utils.bytes.bs58.decode(anchor.utils.bytes.bs58.encode([]))
 ); // your wallet's secret key
 export type PaymentManagerParams = {
   feeCollector: PublicKey;
@@ -19,6 +20,7 @@ export type PaymentManagerParams = {
 
 const main = async (
   marketplaceName: string,
+  transferAuthorityName: string,
   paymentManagerName: string,
   cluster = "devnet"
 ) => {
@@ -28,16 +30,21 @@ const main = async (
   await withUpdateMarketplace(
     transaction,
     connection,
-    new Wallet(wallet),
+    new SignerWallet(wallet),
     marketplaceName,
+    transferAuthorityName,
     paymentManagerName,
     new PublicKey("cpmaMZyBQiPxpeuxNsQhW7N8z1o9yaNdLgiPhWGUEiX"),
     []
   );
   try {
-    await executeTransaction(connection, transaction, new Wallet(wallet), {});
+    await executeTransaction(
+      connection,
+      new SignerWallet(wallet),
+      transaction,
+      {}
+    );
   } catch (e) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     console.log(`Transactionn failed: ${e}`);
   }
   const marketplaceData = await tryGetAccount(() =>
@@ -51,8 +58,12 @@ const main = async (
 };
 
 const marketplaceName = "cardinal";
+const transferAuthorityName = "global";
 const paymentManagerName = "cardinal-marketplace";
 
-main(marketplaceName, paymentManagerName, "devnet").catch((e) =>
-  console.log(e)
-);
+main(
+  marketplaceName,
+  transferAuthorityName,
+  paymentManagerName,
+  "devnet"
+).catch((e) => console.log(e));

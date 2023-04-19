@@ -1,16 +1,15 @@
-import type { AccountData } from "@cardinal/common";
-import { executeTransaction } from "@cardinal/common";
-import { utils, Wallet } from "@project-serum/anchor";
+import { utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { BN } from "bn.js";
-
-import { withUpdateMaxExpiration } from "../src";
-import type { TimeInvalidatorData } from "../src/programs/timeInvalidator";
+import { AccountData, withUpdateMaxExpiration } from "../src";
+import { TimeInvalidatorData } from "../src/programs/timeInvalidator";
 import { getTimeInvalidator } from "../src/programs/timeInvalidator/accounts";
 import { findTimeInvalidatorAddress } from "../src/programs/timeInvalidator/pda";
 import { getTokenManagersForIssuer } from "../src/programs/tokenManager/accounts";
+
 import { connectionFor } from "./connection";
-import { chunkArray } from "./issueVestingTokens";
+import { chunkArray, executeTransaction } from "./utils";
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_KEY || "")
@@ -23,9 +22,11 @@ const updateMaxExpiration = async (cluster = "mainnet"): Promise<void> => {
   const connection = connectionFor(cluster);
   console.log("Fetching all token managers...");
   const tokenManagers = await getTokenManagersForIssuer(connection, issuerId);
-  const timeInvalidatorIds = tokenManagers.map((tm) =>
-    findTimeInvalidatorAddress(tm.pubkey)
-  );
+  const timeInvalidatorIds = (
+    await Promise.all(
+      tokenManagers.map((tm) => findTimeInvalidatorAddress(tm.pubkey))
+    )
+  ).map((t) => t[0]);
   const timeInvalidatorData = await Promise.all(
     timeInvalidatorIds.map((t) => getTimeInvalidator(connection, t))
   );
@@ -46,7 +47,7 @@ const updateMaxExpiration = async (cluster = "mainnet"): Promise<void> => {
           await withUpdateMaxExpiration(
             transaction,
             connection,
-            new Wallet(wallet),
+            new SignerWallet(wallet),
             tm.pubkey,
             newMaxExpiration
           );
@@ -55,8 +56,8 @@ const updateMaxExpiration = async (cluster = "mainnet"): Promise<void> => {
       if (transaction.instructions.length > 0) {
         const txid = await executeTransaction(
           connection,
+          new SignerWallet(wallet),
           transaction,
-          new Wallet(wallet),
           {}
         );
         console.log(

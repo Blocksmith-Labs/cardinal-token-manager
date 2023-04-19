@@ -1,5 +1,5 @@
-import type { AccountData } from "@cardinal/common";
 import type { Connection, PublicKey } from "@solana/web3.js";
+import type { AccountData } from "../../utils";
 import type { ListingData, MarketplaceData, TransferAuthorityData, TransferData } from "./constants";
 export declare const getTransferAuthority: (connection: Connection, transferAuthorityId: PublicKey) => Promise<AccountData<TransferAuthorityData>>;
 export declare const getTransferAuthorityByName: (connection: Connection, name: string) => Promise<AccountData<TransferAuthorityData>>;

@@ -1,100 +1,47 @@
-import type { AccountData } from "@cardinal/common";
-import {
-  decodeIdlAccount,
-  fetchAccountDataById,
-  findAta,
-  findMintMetadataId,
-  getBatchedMultipleAccounts,
-  METADATA_PROGRAM_ID,
-  tryDecodeIdlAccount,
-  tryGetAccount,
-  tryNull,
-  withFindOrInitAssociatedTokenAccount,
-} from "@cardinal/common";
-import {
-  findMintManagerId as findCCSMintManagerId,
-  findRulesetId,
-  PROGRAM_ADDRESS,
-} from "@cardinal/creator-standard";
-import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
-import { withRemainingAccountsForPayment } from "@cardinal/payment-manager/dist/cjs/utils";
-import {
-  Metadata,
-  TokenStandard,
-} from "@metaplex-foundation/mpl-token-metadata";
 import { BN } from "@project-serum/anchor";
-import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
-import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
+import type { Wallet } from "@saberhq/solana-contrib";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountIdempotentInstruction,
-  getAccount,
-  getAssociatedTokenAddressSync,
+  Token,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import type { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import {
-  ComputeBudgetProgram,
-  Keypair,
-  SystemProgram,
-  SYSVAR_INSTRUCTIONS_PUBKEY,
-  SYSVAR_RENT_PUBKEY,
-} from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 
-import type { CardinalTokenManager } from "./idl/cardinal_token_manager";
-import { timeInvalidator, tokenManager, useInvalidator } from "./programs";
-import type {
-  CLAIM_APPROVER_PROGRAM,
-  ClaimApproverParams,
-} from "./programs/claimApprover";
+import { findAta } from ".";
 import {
-  CLAIM_APPROVER_IDL,
-  claimApproverProgram,
-  defaultPaymentManagerId,
-} from "./programs/claimApprover";
-import { findClaimApproverAddress } from "./programs/claimApprover/pda";
-import type { TimeInvalidationParams } from "./programs/timeInvalidator";
-import { timeInvalidatorProgram } from "./programs/timeInvalidator";
-import { findTimeInvalidatorAddress } from "./programs/timeInvalidator/pda";
+  claimApprover,
+  timeInvalidator,
+  tokenManager,
+  useInvalidator,
+} from "./programs";
+import type { ClaimApproverParams } from "./programs/claimApprover/instruction";
+import type { TimeInvalidationParams } from "./programs/timeInvalidator/instruction";
 import { shouldTimeInvalidate } from "./programs/timeInvalidator/utils";
-import type {
-  TOKEN_MANAGER_PROGRAM,
-  TokenManagerData,
-} from "./programs/tokenManager";
+import type { TokenManagerData } from "./programs/tokenManager";
 import {
   CRANK_KEY,
   InvalidationType,
-  TOKEN_MANAGER_ADDRESS,
-  TOKEN_MANAGER_IDL,
   TokenManagerKind,
-  tokenManagerProgram,
   TokenManagerState,
 } from "./programs/tokenManager";
 import { getTokenManager } from "./programs/tokenManager/accounts";
+import { setTransferAuthority } from "./programs/tokenManager/instruction";
 import {
-  findMintCounterId,
   findMintManagerId,
-  findReceiptMintManagerId,
   findTokenManagerAddress,
   tokenManagerAddressFromMint,
 } from "./programs/tokenManager/pda";
 import {
-  getRemainingAccountsForClaim,
-  getRemainingAccountsForIssue,
   getRemainingAccountsForKind,
   getRemainingAccountsForTransfer,
-  getRemainingAccountsForUnissue,
-  withRemainingAccountsForInvalidate,
+  withRemainingAccountsForPayment,
   withRemainingAccountsForReturn,
 } from "./programs/tokenManager/utils";
-import {
-  getListing,
-  getTransferAuthorityByName,
-} from "./programs/transferAuthority/accounts";
-import { findListingAddress } from "./programs/transferAuthority/pda";
-import type { UseInvalidationParams } from "./programs/useInvalidator";
-import { useInvalidatorProgram } from "./programs/useInvalidator";
-import { findUseInvalidatorAddress } from "./programs/useInvalidator/pda";
+import { getTransferAuthorityByName } from "./programs/transferAuthority/accounts";
+import type { UseInvalidationParams } from "./programs/useInvalidator/instruction";
+import type { AccountData } from "./utils";
+import { tryGetAccount, withFindOrInitAssociatedTokenAccount } from "./utils";
 
 export type IssueParameters = {
   claimPayment?: ClaimApproverParams;
@@ -102,7 +49,7 @@ export type IssueParameters = {
   useInvalidation?: UseInvalidationParams;
   transferAuthorityInfo?: {
     transferAuthorityName: string;
-    creator?: PublicKey;
+    setInvalidator?: boolean;
   };
   mint: PublicKey;
   amount?: BN;
@@ -114,7 +61,6 @@ export type IssueParameters = {
   receiptOptions?: {
     receiptMintKeypair: Keypair;
   };
-  rulesetId?: PublicKey;
   customInvalidators?: PublicKey[];
 };
 
@@ -144,36 +90,26 @@ export const withIssueToken = async (
     permissionedClaimApprover,
     receiptOptions = undefined,
     customInvalidators = undefined,
-    rulesetId = undefined,
   }: IssueParameters,
   payer = wallet.publicKey
 ): Promise<[Transaction, PublicKey, Keypair | undefined]> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const caProgram = claimApproverProgram(connection, wallet);
-  const tmeInvalidatorProgram = timeInvalidatorProgram(connection, wallet);
-  const usgInvalidatorProgram = useInvalidatorProgram(connection, wallet);
-
   // create mint manager
   if (
     kind === TokenManagerKind.Managed ||
     kind === TokenManagerKind.Permissioned
   ) {
-    const mintManagerId = findMintManagerId(mint);
+    const [mintManagerIx, mintManagerId] =
+      await tokenManager.instruction.creatMintManager(
+        connection,
+        wallet,
+        mint,
+        payer
+      );
+
     const mintManagerData = await tryGetAccount(() =>
       tokenManager.accounts.getMintManager(connection, mintManagerId)
     );
     if (!mintManagerData) {
-      const mintManagerIx = await tmManagerProgram.methods
-        .createMintManager()
-        .accounts({
-          mintManager: mintManagerId,
-          mint: mint,
-          freezeAuthority: wallet.publicKey,
-          payer: wallet.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        })
-        .instruction();
       transaction.add(mintManagerIx);
     }
   }
@@ -186,26 +122,18 @@ export const withIssueToken = async (
       : useInvalidation || timeInvalidation
       ? 1
       : 0) +
-    (transferAuthorityInfo?.creator ? 1 : 0);
-  const tokenManagerId = findTokenManagerAddress(mint);
-  const mintCounterId = findMintCounterId(mint);
-  const tokenManagerIx = await tmManagerProgram.methods
-    .init({
-      amount: amount,
-      kind: kind,
-      invalidationType: invalidationType,
-      numInvalidators: numInvalidator,
-    })
-    .accounts({
-      tokenManager: tokenManagerId,
-      mintCounter: mintCounterId,
-      mint: mint,
-      issuer: wallet.publicKey,
-      payer: wallet.publicKey,
-      issuerTokenAccount: issuerTokenAccountId,
-      systemProgram: SystemProgram.programId,
-    })
-    .instruction();
+    (transferAuthorityInfo?.setInvalidator ? 1 : 0);
+  const [tokenManagerIx, tokenManagerId] = await tokenManager.instruction.init(
+    connection,
+    wallet,
+    mint,
+    issuerTokenAccountId,
+    amount,
+    kind,
+    invalidationType,
+    numInvalidator,
+    payer
+  );
   transaction.add(tokenManagerIx);
 
   if (transferAuthorityInfo) {
@@ -218,24 +146,23 @@ export const withIssueToken = async (
     if (!checkTransferAuthority?.parsed) {
       throw `No transfer authority with name ${transferAuthorityInfo.transferAuthorityName} found`;
     }
-    const setTransferAuthorityIx = await tmManagerProgram.methods
-      .setTransferAuthority(checkTransferAuthority.pubkey)
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-
-    transaction.add(setTransferAuthorityIx);
-    if (transferAuthorityInfo.creator) {
-      const adInvalidatorIx = await tmManagerProgram.methods
-        .addInvalidator(transferAuthorityInfo.creator)
-        .accounts({
-          tokenManager: tokenManagerId,
-          issuer: wallet.publicKey,
-        })
-        .instruction();
-      transaction.add(adInvalidatorIx);
+    transaction.add(
+      setTransferAuthority(
+        connection,
+        wallet,
+        tokenManagerId,
+        checkTransferAuthority.pubkey
+      )
+    );
+    if (transferAuthorityInfo.setInvalidator) {
+      transaction.add(
+        tokenManager.instruction.addInvalidator(
+          connection,
+          wallet,
+          tokenManagerId,
+          checkTransferAuthority.pubkey
+        )
+      );
     }
   }
 
@@ -247,119 +174,84 @@ export const withIssueToken = async (
     if (visibility !== "public") {
       throw "Paid rentals currently must be public";
     }
-    const paidClaimApproverId = findClaimApproverAddress(tokenManagerId);
-    const paidClaimApproverIx = await caProgram.methods
-      .init({
-        paymentMint: claimPayment.paymentMint,
-        paymentAmount: new BN(claimPayment.paymentAmount),
-        paymentManager: claimPayment.paymentManager || defaultPaymentManagerId,
-        collector: claimPayment.collector || CRANK_KEY,
-      })
-      .accounts({
-        tokenManager: tokenManagerId,
-        claimApprover: paidClaimApproverId,
-        issuer: wallet.publicKey,
-        payer: payer ?? wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .instruction();
+    const [paidClaimApproverIx, paidClaimApproverId] =
+      await claimApprover.instruction.init(
+        connection,
+        wallet,
+        tokenManagerId,
+        claimPayment,
+        payer
+      );
     transaction.add(paidClaimApproverIx);
-    const setClaimApproverIx = await tmManagerProgram.methods
-      .setClaimApprover(paidClaimApproverId)
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(setClaimApproverIx);
+    transaction.add(
+      tokenManager.instruction.setClaimApprover(
+        connection,
+        wallet,
+        tokenManagerId,
+        paidClaimApproverId
+      )
+    );
   } else if (visibility === "private") {
     otp = Keypair.generate();
-    const setClaimApproverIx = await tmManagerProgram.methods
-      .setClaimApprover(otp.publicKey)
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(setClaimApproverIx);
+    transaction.add(
+      tokenManager.instruction.setClaimApprover(
+        connection,
+        wallet,
+        tokenManagerId,
+        otp.publicKey
+      )
+    );
   } else if (visibility === "permissioned") {
     if (!permissionedClaimApprover) {
       throw "Claim approver is not specified for permissioned link";
     }
-    const setClaimApproverIx = await tmManagerProgram.methods
-      .setClaimApprover(permissionedClaimApprover)
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(setClaimApproverIx);
+    transaction.add(
+      tokenManager.instruction.setClaimApprover(
+        connection,
+        wallet,
+        tokenManagerId,
+        permissionedClaimApprover
+      )
+    );
   }
 
   //////////////////////////////
   /////// time invalidator /////
   //////////////////////////////
   if (timeInvalidation) {
-    const timeInvalidatorId = findTimeInvalidatorAddress(tokenManagerId);
-    const timeInvalidatorIx = await tmeInvalidatorProgram.methods
-      .init({
-        collector: timeInvalidation.collector || CRANK_KEY,
-        paymentManager:
-          timeInvalidation.paymentManager || defaultPaymentManagerId,
-        durationSeconds:
-          timeInvalidation.durationSeconds !== undefined
-            ? new BN(timeInvalidation.durationSeconds)
-            : null,
-        extensionPaymentAmount:
-          timeInvalidation.extension?.extensionPaymentAmount !== undefined
-            ? new BN(timeInvalidation.extension?.extensionPaymentAmount)
-            : null,
-        extensionDurationSeconds:
-          timeInvalidation.extension?.extensionDurationSeconds !== undefined
-            ? new BN(timeInvalidation.extension?.extensionDurationSeconds)
-            : null,
-        extensionPaymentMint:
-          timeInvalidation.extension?.extensionPaymentMint || null,
-        maxExpiration:
-          timeInvalidation.maxExpiration !== undefined
-            ? new BN(timeInvalidation.maxExpiration)
-            : null,
-        disablePartialExtension:
-          timeInvalidation.extension?.disablePartialExtension || null,
-      })
-      .accounts({
-        tokenManager: tokenManagerId,
-        timeInvalidator: timeInvalidatorId,
-        issuer: wallet.publicKey,
-        payer: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .instruction();
+    const [timeInvalidatorIx, timeInvalidatorId] =
+      await timeInvalidator.instruction.init(
+        connection,
+        wallet,
+        tokenManagerId,
+        timeInvalidation,
+        payer
+      );
     transaction.add(timeInvalidatorIx);
-    const addInvalidatorIx = await tmManagerProgram.methods
-      .addInvalidator(timeInvalidatorId)
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(addInvalidatorIx);
+    transaction.add(
+      tokenManager.instruction.addInvalidator(
+        connection,
+        wallet,
+        tokenManagerId,
+        timeInvalidatorId
+      )
+    );
   } else {
-    const timeInvalidatorId = findTimeInvalidatorAddress(tokenManagerId);
+    const [timeInvalidatorId] =
+      await timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
     const timeInvalidatorData = await tryGetAccount(() =>
       timeInvalidator.accounts.getTimeInvalidator(connection, timeInvalidatorId)
     );
     if (timeInvalidatorData) {
-      const closeIx = await tmeInvalidatorProgram.methods
-        .close()
-        .accounts({
-          tokenManager: tokenManagerId,
-          timeInvalidator: timeInvalidatorId,
-          collector: timeInvalidatorData.parsed.collector,
-          closer: wallet.publicKey,
-        })
-        .instruction();
-      transaction.add(closeIx);
+      transaction.add(
+        timeInvalidator.instruction.close(
+          connection,
+          wallet,
+          timeInvalidatorId,
+          tokenManagerId,
+          timeInvalidatorData.parsed.collector
+        )
+      );
     }
   }
 
@@ -367,63 +259,39 @@ export const withIssueToken = async (
   /////////// usages ///////////
   //////////////////////////////
   if (useInvalidation) {
-    const useInvalidatorId = findUseInvalidatorAddress(tokenManagerId);
-    const useInvalidatorIx = await usgInvalidatorProgram.methods
-      .init({
-        collector: useInvalidation.collector || CRANK_KEY,
-        paymentManager:
-          useInvalidation.paymentManager || defaultPaymentManagerId,
-        totalUsages: useInvalidation.totalUsages
-          ? new BN(useInvalidation.totalUsages)
-          : null,
-        maxUsages: useInvalidation.extension?.maxUsages
-          ? new BN(useInvalidation.extension?.maxUsages)
-          : null,
-        useAuthority: useInvalidation.useAuthority || null,
-        extensionPaymentAmount: useInvalidation.extension
-          ?.extensionPaymentAmount
-          ? new BN(useInvalidation.extension?.extensionPaymentAmount)
-          : null,
-        extensionPaymentMint:
-          useInvalidation.extension?.extensionPaymentMint || null,
-        extensionUsages: useInvalidation.extension?.extensionUsages
-          ? new BN(useInvalidation.extension.extensionUsages)
-          : null,
-      })
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        issuer: wallet.publicKey,
-        payer: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .instruction();
+    const [useInvalidatorIx, useInvalidatorId] =
+      await useInvalidator.instruction.init(
+        connection,
+        wallet,
+        tokenManagerId,
+        useInvalidation,
+        payer
+      );
     transaction.add(useInvalidatorIx);
-    const addInvalidatorIx = await tmManagerProgram.methods
-      .addInvalidator(useInvalidatorId)
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(addInvalidatorIx);
+    transaction.add(
+      tokenManager.instruction.addInvalidator(
+        connection,
+        wallet,
+        tokenManagerId,
+        useInvalidatorId
+      )
+    );
   } else {
-    const useInvalidatorId =
-      useInvalidator.pda.findUseInvalidatorAddress(tokenManagerId);
+    const [useInvalidatorId] =
+      await useInvalidator.pda.findUseInvalidatorAddress(tokenManagerId);
     const useInvalidatorData = await tryGetAccount(() =>
       useInvalidator.accounts.getUseInvalidator(connection, useInvalidatorId)
     );
     if (useInvalidatorData) {
-      const closeIx = await usgInvalidatorProgram.methods
-        .close()
-        .accounts({
-          tokenManager: tokenManagerId,
-          useInvalidator: useInvalidatorId,
-          collector: useInvalidatorData.parsed.collector,
-          closer: wallet.publicKey,
-        })
-        .instruction();
-      transaction.add(closeIx);
+      transaction.add(
+        useInvalidator.instruction.close(
+          connection,
+          wallet,
+          useInvalidatorId,
+          tokenManagerId,
+          useInvalidatorData.parsed.collector
+        )
+      );
     }
   }
 
@@ -432,14 +300,14 @@ export const withIssueToken = async (
   /////////////////////////////////////////
   if (customInvalidators) {
     for (const invalidator of customInvalidators) {
-      const addInvalidatorIx = await tmManagerProgram.methods
-        .addInvalidator(invalidator)
-        .accounts({
-          tokenManager: tokenManagerId,
-          issuer: wallet.publicKey,
-        })
-        .instruction();
-      transaction.add(addInvalidatorIx);
+      transaction.add(
+        tokenManager.instruction.addInvalidator(
+          connection,
+          wallet,
+          tokenManagerId,
+          invalidator
+        )
+      );
     }
   }
 
@@ -453,60 +321,41 @@ export const withIssueToken = async (
     true
   );
 
-  const issueIx = await tmManagerProgram.methods
-    .issue()
-    .accounts({
-      tokenManager: tokenManagerId,
-      tokenManagerTokenAccount: tokenManagerTokenAccountId,
-      issuer: wallet.publicKey,
-      issuerTokenAccount: issuerTokenAccountId,
-      payer: wallet.publicKey,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-    })
-    .remainingAccounts(
-      getRemainingAccountsForIssue(
-        kind,
-        mint,
-        issuerTokenAccountId,
-        tokenManagerTokenAccountId,
-        rulesetId
-      )
+  transaction.add(
+    tokenManager.instruction.issue(
+      connection,
+      wallet,
+      tokenManagerId,
+      tokenManagerTokenAccountId,
+      issuerTokenAccountId,
+      payer,
+      kind === TokenManagerKind.Permissioned
+        ? [
+            {
+              pubkey: CRANK_KEY,
+              isSigner: false,
+              isWritable: true,
+            },
+          ]
+        : []
     )
-    .instruction();
-  transaction.add(issueIx);
+  );
 
   //////////////////////////////
   //////////// index ///////////
   //////////////////////////////
   if (receiptOptions) {
     const { receiptMintKeypair } = receiptOptions;
-    const receiptMintMetadataId = findMintMetadataId(
-      receiptMintKeypair.publicKey
+    transaction.add(
+      await tokenManager.instruction.claimReceiptMint(
+        connection,
+        wallet,
+        "receipt",
+        tokenManagerId,
+        receiptMintKeypair.publicKey,
+        payer
+      )
     );
-    const recipientTokenAccountId = await findAta(
-      receiptMintKeypair.publicKey,
-      wallet.publicKey
-    );
-    const receiptManagerId = findReceiptMintManagerId();
-    const claimReceiptMintIx = await tmManagerProgram.methods
-      .claimReceiptMint("receipt")
-      .accounts({
-        tokenManager: tokenManagerId,
-        issuer: wallet.publicKey,
-        receiptMint: receiptMintKeypair.publicKey,
-        receiptMintMetadata: receiptMintMetadataId,
-        recipientTokenAccount: recipientTokenAccountId,
-        receiptMintManager: receiptManagerId,
-        payer: wallet.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedToken: ASSOCIATED_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        tokenMetadataProgram: METADATA_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .instruction();
-    transaction.add(claimReceiptMintIx);
   }
 
   return [transaction, tokenManagerId, otp];
@@ -528,68 +377,34 @@ export const withClaimToken = async (
   tokenManagerId: PublicKey,
   additionalOptions?: {
     payer?: PublicKey;
-  },
-  buySideTokenAccountId?: PublicKey
-): Promise<Transaction> => {
-  const claimApproverId = findClaimApproverAddress(tokenManagerId);
-  const accountData = await fetchAccountDataById(connection, [
-    tokenManagerId,
-    claimApproverId,
-  ]);
-  const tokenManagerInfo = accountData[tokenManagerId.toString()];
-  if (!tokenManagerInfo?.data) throw "Token manager not found";
-  const tokenManagerData = decodeIdlAccount<
-    "tokenManager",
-    TOKEN_MANAGER_PROGRAM
-  >(tokenManagerInfo, "tokenManager", TOKEN_MANAGER_IDL);
-
-  const claimApproverInfo = accountData[claimApproverId.toString()];
-  const claimApproverData = claimApproverInfo
-    ? tryDecodeIdlAccount<"paidClaimApprover", CLAIM_APPROVER_PROGRAM>(
-        claimApproverInfo,
-        "paidClaimApprover",
-        CLAIM_APPROVER_IDL
-      )
-    : null;
-
-  const metadataId = findMintMetadataId(tokenManagerData.parsed.mint);
-  const metadata = await tryNull(
-    Metadata.fromAccountAddress(connection, metadataId)
-  );
-
-  const claimReceiptId = tokenManager.pda.findClaimReceiptId(
-    tokenManagerId,
-    wallet.publicKey
-  );
-
-  if (
-    tokenManagerData.parsed.kind === TokenManagerKind.Programmable ||
-    metadata?.tokenStandard === TokenStandard.ProgrammableNonFungible
-  ) {
-    transaction.add(
-      ComputeBudgetProgram.setComputeUnitLimit({
-        units: 1000000,
-      })
-    );
   }
+): Promise<Transaction> => {
+  const [tokenManagerData, claimApproverData] = await Promise.all([
+    tokenManager.accounts.getTokenManager(connection, tokenManagerId),
+    tryGetAccount(() =>
+      claimApprover.accounts.getClaimApprover(connection, tokenManagerId)
+    ),
+  ]);
 
+  let claimReceiptId;
   // pay claim approver
   if (
-    claimApproverData?.parsed &&
+    claimApproverData &&
     tokenManagerData.parsed.claimApprover &&
     tokenManagerData.parsed.claimApprover.toString() ===
-      claimApproverId.toString()
+      claimApproverData.pubkey.toString()
   ) {
-    const payerTokenAccountId = getAssociatedTokenAddressSync(
+    const payerTokenAccountId = await findAta(
       claimApproverData.parsed.paymentMint,
       wallet.publicKey
     );
 
-    const [
-      issuerTokenAccountId,
-      feeCollectorTokenAccountId,
-      remainingAccounts,
-    ] = await withRemainingAccountsForPayment(
+    [claimReceiptId] = await tokenManager.pda.findClaimReceiptId(
+      tokenManagerId,
+      wallet.publicKey
+    );
+
+    const paymentAccounts = await withRemainingAccountsForPayment(
       transaction,
       connection,
       wallet,
@@ -597,85 +412,66 @@ export const withClaimToken = async (
       claimApproverData.parsed.paymentMint,
       tokenManagerData.parsed.issuer,
       claimApproverData.parsed.paymentManager,
-      buySideTokenAccountId,
       {
         receiptMint: tokenManagerData.parsed.receiptMint,
         payer: additionalOptions?.payer,
       }
     );
 
-    const payIx = await claimApproverProgram(connection, wallet)
-      .methods.pay()
-      .accounts({
-        tokenManager: tokenManagerId,
-        paymentTokenAccount: issuerTokenAccountId,
-        feeCollectorTokenAccount: feeCollectorTokenAccountId,
-        paymentManager: claimApproverData.parsed.paymentManager,
-        claimApprover: claimApproverId,
-        payer: wallet.publicKey,
-        payerTokenAccount: payerTokenAccountId,
-        claimReceipt: claimReceiptId,
-        cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
-        cardinalPaymentManager: PAYMENT_MANAGER_ADDRESS,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      })
-      .remainingAccounts(remainingAccounts)
-      .instruction();
-    transaction.add(payIx);
+    transaction.add(
+      await claimApprover.instruction.pay(
+        connection,
+        wallet,
+        tokenManagerId,
+        payerTokenAccountId,
+        claimApproverData.parsed.paymentManager,
+        paymentAccounts
+      )
+    );
   } else if (tokenManagerData.parsed.claimApprover) {
-    const createClaimReceiptIx = await tokenManagerProgram(connection, wallet)
-      .methods.createClaimReceipt(wallet.publicKey)
-      .accountsStrict({
-        tokenManager: tokenManagerId,
-        claimApprover: tokenManagerData.parsed.claimApprover,
-        claimReceipt: claimReceiptId,
-        payer: additionalOptions?.payer || wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .instruction();
+    // approve claim request
+    const [createClaimReceiptIx, claimReceipt] =
+      await tokenManager.instruction.createClaimReceipt(
+        connection,
+        wallet,
+        tokenManagerId,
+        tokenManagerData.parsed.claimApprover,
+        additionalOptions?.payer
+      );
     transaction.add(createClaimReceiptIx);
+    claimReceiptId = claimReceipt;
   }
 
-  const tokenManagerTokenAccountId = getAssociatedTokenAddressSync(
+  const tokenManagerTokenAccountId = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
     tokenManagerData.parsed.mint,
     tokenManagerId,
     true
   );
-  const recipientTokenAccountId = getAssociatedTokenAddressSync(
+
+  const recipientTokenAccountId = await withFindOrInitAssociatedTokenAccount(
+    transaction,
+    connection,
     tokenManagerData.parsed.mint,
-    wallet.publicKey
+    wallet.publicKey,
+    additionalOptions?.payer ?? wallet.publicKey
   );
-  transaction.add(
-    createAssociatedTokenAccountIdempotentInstruction(
-      additionalOptions?.payer ?? wallet.publicKey,
-      recipientTokenAccountId,
-      wallet.publicKey,
-      tokenManagerData.parsed.mint
-    )
-  );
+
   // claim
-  const claimIx = await tokenManagerProgram(connection, wallet)
-    .methods.claim()
-    .accounts({
-      tokenManager: tokenManagerId,
-      tokenManagerTokenAccount: tokenManagerTokenAccountId,
-      mint: tokenManagerData.parsed.mint,
-      recipient: wallet.publicKey,
-      recipientTokenAccount: recipientTokenAccountId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-    })
-    .remainingAccounts(
-      getRemainingAccountsForClaim(
-        { parsed: tokenManagerData.parsed, pubkey: tokenManagerId },
-        recipientTokenAccountId,
-        metadata,
-        claimReceiptId
-      )
+  transaction.add(
+    await tokenManager.instruction.claim(
+      connection,
+      wallet,
+      tokenManagerId,
+      tokenManagerData.parsed.kind,
+      tokenManagerData.parsed.mint,
+      tokenManagerTokenAccountId,
+      recipientTokenAccountId,
+      claimReceiptId
     )
-    .instruction();
-  transaction.add(claimIx);
+  );
+
   return transaction;
 };
 
@@ -685,57 +481,31 @@ export const withUnissueToken = async (
   wallet: Wallet,
   mintId: PublicKey
 ): Promise<Transaction> => {
-  const tokenManagerId = tokenManagerAddressFromMint(mintId);
-  const [tokenManagerInfo, metadataInfo] = await getBatchedMultipleAccounts(
+  const tokenManagerId = await tokenManagerAddressFromMint(connection, mintId);
+
+  const tokenManagerTokenAccountId = await findAta(
+    mintId,
+    tokenManagerId,
+    true
+  );
+
+  const issuerTokenAccountId = await withFindOrInitAssociatedTokenAccount(
+    transaction,
     connection,
-    [tokenManagerId, findMintMetadataId(mintId)]
+    mintId,
+    wallet.publicKey,
+    wallet.publicKey
   );
 
-  const metadata = metadataInfo
-    ? Metadata.deserialize(metadataInfo.data)[0]
-    : null;
-  if (!tokenManagerInfo) throw "Token manager not found";
-  const tokenManager = decodeIdlAccount<"tokenManager", CardinalTokenManager>(
-    tokenManagerInfo,
-    "tokenManager",
-    TOKEN_MANAGER_IDL
-  );
-
-  transaction.add(
-    createAssociatedTokenAccountIdempotentInstruction(
-      wallet.publicKey,
-      getAssociatedTokenAddressSync(mintId, wallet.publicKey),
-      wallet.publicKey,
-      mintId
+  return transaction.add(
+    tokenManager.instruction.unissue(
+      connection,
+      wallet,
+      tokenManagerId,
+      tokenManagerTokenAccountId,
+      issuerTokenAccountId
     )
   );
-  transaction.add(
-    await tokenManagerProgram(connection, wallet)
-      .methods.unissue()
-      .accounts({
-        tokenManager: tokenManagerId,
-        tokenManagerTokenAccount: getAssociatedTokenAddressSync(
-          mintId,
-          tokenManagerId,
-          true
-        ),
-        issuer: wallet.publicKey,
-        issuerTokenAccount: getAssociatedTokenAddressSync(
-          mintId,
-          wallet.publicKey
-        ),
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .remainingAccounts(
-        getRemainingAccountsForUnissue(
-          tokenManagerId,
-          tokenManager.parsed,
-          metadata
-        )
-      )
-      .instruction()
-  );
-  return transaction;
 };
 
 export const withInvalidate = async (
@@ -745,17 +515,14 @@ export const withInvalidate = async (
   mintId: PublicKey,
   UTCNow: number = Date.now() / 1000
 ): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const tmeInvalidatorProgram = timeInvalidatorProgram(connection, wallet);
-  const usgInvalidatorProgram = useInvalidatorProgram(connection, wallet);
+  const tokenManagerId = await tokenManagerAddressFromMint(connection, mintId);
 
-  const tokenManagerId = tokenManagerAddressFromMint(mintId);
-  const useInvalidatorId =
-    useInvalidator.pda.findUseInvalidatorAddress(tokenManagerId);
-  const timeInvalidatorId =
-    timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
+  const [[useInvalidatorId], [timeInvalidatorId]] = await Promise.all([
+    useInvalidator.pda.findUseInvalidatorAddress(tokenManagerId),
+    timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId),
+  ]);
 
-  const [useInvalidatorData, timeInvalidatorData, tokenManagerData, metadata] =
+  const [useInvalidatorData, timeInvalidatorData, tokenManagerData] =
     await Promise.all([
       tryGetAccount(() =>
         useInvalidator.accounts.getUseInvalidator(connection, useInvalidatorId)
@@ -769,27 +536,9 @@ export const withInvalidate = async (
       tryGetAccount(() =>
         tokenManager.accounts.getTokenManager(connection, tokenManagerId)
       ),
-      tryNull(
-        Metadata.fromAccountAddress(connection, findMintMetadataId(mintId))
-      ),
     ]);
 
   if (!tokenManagerData) return transaction;
-  if (
-    tokenManagerData.parsed.kind === TokenManagerKind.Programmable ||
-    metadata?.tokenStandard === TokenStandard.ProgrammableNonFungible
-  ) {
-    transaction.add(
-      ComputeBudgetProgram.setComputeUnitLimit({
-        units: 1000000,
-      })
-    );
-  }
-
-  const recipientTokenAccount = await getAccount(
-    connection,
-    tokenManagerData.parsed.recipientTokenAccount
-  );
 
   const tokenManagerTokenAccountId = await withFindOrInitAssociatedTokenAccount(
     transaction,
@@ -800,76 +549,66 @@ export const withInvalidate = async (
     true
   );
 
-  const remainingAccounts = await withRemainingAccountsForInvalidate(
+  const remainingAccountsForReturn = await withRemainingAccountsForReturn(
     transaction,
     connection,
     wallet,
-    mintId,
-    tokenManagerData,
-    recipientTokenAccount.owner,
-    metadata
+    tokenManagerData
   );
+
   if (
     useInvalidatorData &&
     useInvalidatorData.parsed.totalUsages &&
     useInvalidatorData.parsed.usages.gte(useInvalidatorData.parsed.totalUsages)
   ) {
-    const invalidateIx = await usgInvalidatorProgram.methods
-      .invalidate()
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        invalidator: wallet.publicKey,
-        cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        tokenManagerTokenAccount: tokenManagerTokenAccountId,
-        mint: mintId,
-        recipientTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .remainingAccounts(remainingAccounts)
-      .instruction();
-    transaction.add(invalidateIx);
-    const closeIx = await usgInvalidatorProgram.methods
-      .close()
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        collector: useInvalidatorData.parsed.collector,
-        closer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(closeIx);
+    transaction.add(
+      await useInvalidator.instruction.invalidate(
+        connection,
+        wallet,
+        mintId,
+        tokenManagerId,
+        tokenManagerData.parsed.kind,
+        tokenManagerData.parsed.state,
+        tokenManagerTokenAccountId,
+        tokenManagerData?.parsed.recipientTokenAccount,
+        remainingAccountsForReturn
+      )
+    );
+    transaction.add(
+      useInvalidator.instruction.close(
+        connection,
+        wallet,
+        useInvalidatorId,
+        tokenManagerId,
+        useInvalidatorData.parsed.collector
+      )
+    );
   } else if (
     timeInvalidatorData &&
     shouldTimeInvalidate(tokenManagerData, timeInvalidatorData, UTCNow)
   ) {
-    const invalidateIx = await tmeInvalidatorProgram.methods
-      .invalidate()
-      .accounts({
-        tokenManager: tokenManagerId,
-        timeInvalidator: timeInvalidatorId,
-        invalidator: wallet.publicKey,
-        cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        tokenManagerTokenAccount: tokenManagerTokenAccountId,
-        mint: mintId,
-        recipientTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .remainingAccounts(remainingAccounts)
-      .instruction();
-    transaction.add(invalidateIx);
-    const closeIx = await tmeInvalidatorProgram.methods
-      .close()
-      .accounts({
-        tokenManager: tokenManagerId,
-        timeInvalidator: timeInvalidatorId,
-        collector: timeInvalidatorData.parsed.collector,
-        closer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(closeIx);
+    transaction.add(
+      await timeInvalidator.instruction.invalidate(
+        connection,
+        wallet,
+        mintId,
+        tokenManagerId,
+        tokenManagerData.parsed.kind,
+        tokenManagerData.parsed.state,
+        tokenManagerTokenAccountId,
+        tokenManagerData?.parsed.recipientTokenAccount,
+        remainingAccountsForReturn
+      )
+    );
+    transaction.add(
+      timeInvalidator.instruction.close(
+        connection,
+        wallet,
+        timeInvalidatorData.pubkey,
+        timeInvalidatorData.parsed.tokenManager,
+        timeInvalidatorData.parsed.collector
+      )
+    );
   } else if (
     tokenManagerData.parsed.invalidators.some((inv) =>
       inv.equals(wallet.publicKey)
@@ -877,21 +616,19 @@ export const withInvalidate = async (
     tokenManagerData.parsed.invalidationType === InvalidationType.Return ||
     tokenManagerData.parsed.invalidationType === InvalidationType.Reissue
   ) {
-    const invalidateIx = await tmManagerProgram.methods
-      .invalidate()
-      .accounts({
-        tokenManager: tokenManagerId,
-        tokenManagerTokenAccount: tokenManagerTokenAccountId,
-        mint: mintId,
-        recipientTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-        invalidator: wallet.publicKey,
-        collector: CRANK_KEY,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .remainingAccounts(remainingAccounts)
-      .instruction();
-    transaction.add(invalidateIx);
+    transaction.add(
+      await tokenManager.instruction.invalidate(
+        connection,
+        wallet,
+        mintId,
+        tokenManagerId,
+        tokenManagerData.parsed.kind,
+        tokenManagerData.parsed.state,
+        tokenManagerTokenAccountId,
+        tokenManagerData?.parsed.recipientTokenAccount,
+        remainingAccountsForReturn
+      )
+    );
   }
   return transaction;
 };
@@ -902,7 +639,6 @@ export const withReturn = async (
   wallet: Wallet,
   tokenManagerData: AccountData<TokenManagerData>
 ): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
   const tokenManagerTokenAccountId = await withFindOrInitAssociatedTokenAccount(
     transaction,
     connection,
@@ -917,31 +653,20 @@ export const withReturn = async (
     wallet,
     tokenManagerData
   );
-  const transferAccounts = getRemainingAccountsForKind(
-    tokenManagerData.parsed.mint,
-    tokenManagerData.parsed.kind
-  );
 
-  const invalidateIx = await tmManagerProgram.methods
-    .invalidate()
-    .accounts({
-      tokenManager: tokenManagerData.pubkey,
-      tokenManagerTokenAccount: tokenManagerTokenAccountId,
-      mint: tokenManagerData.parsed.mint,
-      recipientTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-      invalidator: wallet.publicKey,
-      collector: CRANK_KEY,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      rent: SYSVAR_RENT_PUBKEY,
-    })
-    .remainingAccounts([
-      ...(tokenManagerData.parsed.state === TokenManagerState.Claimed
-        ? transferAccounts
-        : []),
-      ...remainingAccountsForReturn,
-    ])
-    .instruction();
-  transaction.add(invalidateIx);
+  transaction.add(
+    await tokenManager.instruction.invalidate(
+      connection,
+      wallet,
+      tokenManagerData.parsed.mint,
+      tokenManagerData.pubkey,
+      tokenManagerData.parsed.kind,
+      tokenManagerData.parsed.state,
+      tokenManagerTokenAccountId,
+      tokenManagerData?.parsed.recipientTokenAccount,
+      remainingAccountsForReturn
+    )
+  );
   return transaction;
 };
 
@@ -953,11 +678,11 @@ export const withUse = async (
   usages: number,
   collector?: PublicKey
 ): Promise<Transaction> => {
-  const tokenManagerId = tokenManagerAddressFromMint(mintId);
-  const usgInvalidatorProgram = useInvalidatorProgram(connection, wallet);
+  const tokenManagerId = await tokenManagerAddressFromMint(connection, mintId);
 
-  const useInvalidatorId =
-    useInvalidator.pda.findUseInvalidatorAddress(tokenManagerId);
+  const [useInvalidatorId] = await useInvalidator.pda.findUseInvalidatorAddress(
+    tokenManagerId
+  );
 
   const [useInvalidatorData, tokenManagerData] = await Promise.all([
     tryGetAccount(() =>
@@ -970,42 +695,28 @@ export const withUse = async (
 
   if (!useInvalidatorData) {
     // init
-    const initIx = await usgInvalidatorProgram.methods
-      .init({
-        collector: collector ?? CRANK_KEY,
-        paymentManager: defaultPaymentManagerId,
-        totalUsages: null,
-        maxUsages: null,
-        useAuthority: null,
-        extensionPaymentAmount: null,
-        extensionPaymentMint: null,
-        extensionUsages: null,
-      })
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        issuer: wallet.publicKey,
-        payer: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .instruction();
-    transaction.add(initIx);
+    const [InitTx] = await useInvalidator.instruction.init(
+      connection,
+      wallet,
+      tokenManagerId,
+      { collector: collector }
+    );
+    transaction.add(InitTx);
   }
 
   if (!tokenManagerData?.parsed.recipientTokenAccount)
     throw new Error("Token manager has not been claimed");
 
   // use
-  const incrementUsagesIx = await usgInvalidatorProgram.methods
-    .incrementUsages(new BN(usages))
-    .accounts({
-      tokenManager: tokenManagerId,
-      useInvalidator: useInvalidatorId,
-      recipientTokenAccount: tokenManagerData?.parsed.recipientTokenAccount,
-      user: wallet.publicKey,
-    })
-    .instruction();
-  transaction.add(incrementUsagesIx);
+  transaction.add(
+    await useInvalidator.instruction.incrementUsages(
+      connection,
+      wallet,
+      tokenManagerId,
+      tokenManagerData?.parsed.recipientTokenAccount,
+      usages
+    )
+  );
 
   if (
     useInvalidatorData?.parsed.totalUsages &&
@@ -1030,40 +741,28 @@ export const withUse = async (
       tokenManagerData
     );
 
-    const remainingAccountsForKind = getRemainingAccountsForKind(
-      mintId,
-      tokenManagerData.parsed.kind
+    transaction.add(
+      await useInvalidator.instruction.invalidate(
+        connection,
+        wallet,
+        mintId,
+        tokenManagerId,
+        tokenManagerData.parsed.kind,
+        tokenManagerData.parsed.state,
+        tokenManagerTokenAccountId,
+        tokenManagerData?.parsed.recipientTokenAccount,
+        remainingAccountsForReturn
+      )
     );
-    const invalidateIx = await usgInvalidatorProgram.methods
-      .invalidate()
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        invalidator: wallet.publicKey,
-        cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        tokenManagerTokenAccount: tokenManagerTokenAccountId,
-        mint: mintId,
-        recipientTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-        rent: SYSVAR_RENT_PUBKEY,
-      })
-      .remainingAccounts([
-        ...remainingAccountsForKind,
-        ...remainingAccountsForReturn,
-      ])
-      .instruction();
-    transaction.add(invalidateIx);
-
-    const closeIx = await usgInvalidatorProgram.methods
-      .close()
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        collector: useInvalidatorData.parsed.collector,
-        closer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(closeIx);
+    transaction.add(
+      useInvalidator.instruction.close(
+        connection,
+        wallet,
+        useInvalidatorId,
+        tokenManagerId,
+        useInvalidatorData.parsed.collector
+      )
+    );
   }
   return transaction;
 };
@@ -1076,12 +775,10 @@ export const withExtendExpiration = async (
   secondsToAdd: number,
   options?: {
     payer?: PublicKey;
-  },
-  buySideTokenAccountId?: PublicKey
+  }
 ): Promise<Transaction> => {
-  const tmeInvalidatorProgram = timeInvalidatorProgram(connection, wallet);
-  const timeInvalidatorId =
-    timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
+  const [timeInvalidatorId] =
+    await timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
   const [timeInvalidatorData, tokenManagerData] = await Promise.all([
     timeInvalidator.accounts.getTimeInvalidator(connection, timeInvalidatorId),
     tokenManager.accounts.getTokenManager(connection, tokenManagerId),
@@ -1093,11 +790,7 @@ export const withExtendExpiration = async (
       wallet.publicKey
     );
 
-    const [
-      paymentTokenAccountId,
-      feeCollectorTokenAccountId,
-      remainingAccounts,
-    ] = await withRemainingAccountsForPayment(
+    const paymentAccounts = await withRemainingAccountsForPayment(
       transaction,
       connection,
       wallet,
@@ -1105,29 +798,24 @@ export const withExtendExpiration = async (
       timeInvalidatorData.parsed.extensionPaymentMint,
       tokenManagerData.parsed.issuer,
       timeInvalidatorData.parsed.paymentManager,
-      buySideTokenAccountId,
       {
         receiptMint: tokenManagerData.parsed.receiptMint,
         payer: options?.payer,
       }
     );
 
-    const extendExpirationIx = await tmeInvalidatorProgram.methods
-      .extendExpiration(new BN(secondsToAdd))
-      .accounts({
-        tokenManager: tokenManagerId,
-        timeInvalidator: timeInvalidatorId,
-        paymentManager: timeInvalidatorData.parsed.paymentManager,
-        paymentTokenAccount: paymentTokenAccountId,
-        feeCollectorTokenAccount: feeCollectorTokenAccountId,
-        payer: wallet.publicKey,
-        payerTokenAccount: payerTokenAccountId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        cardinalPaymentManager: PAYMENT_MANAGER_ADDRESS,
-      })
-      .remainingAccounts(remainingAccounts)
-      .instruction();
-    transaction.add(extendExpirationIx);
+    transaction.add(
+      timeInvalidator.instruction.extendExpiration(
+        connection,
+        wallet,
+        tokenManagerId,
+        timeInvalidatorData.parsed.paymentManager,
+        payerTokenAccountId,
+        timeInvalidatorId,
+        secondsToAdd,
+        paymentAccounts
+      )
+    );
   } else {
     console.log("No payment mint");
   }
@@ -1143,12 +831,11 @@ export const withExtendUsages = async (
   usagesToAdd: number,
   options?: {
     payer?: PublicKey;
-  },
-  buySideTokenAccountId?: PublicKey
+  }
 ): Promise<Transaction> => {
-  const usgInvalidatorProgram = useInvalidatorProgram(connection, wallet);
-  const useInvalidatorId =
-    useInvalidator.pda.findUseInvalidatorAddress(tokenManagerId);
+  const [useInvalidatorId] = await useInvalidator.pda.findUseInvalidatorAddress(
+    tokenManagerId
+  );
   const [useInvalidatorData, tokenManagerData] = await Promise.all([
     useInvalidator.accounts.getUseInvalidator(connection, useInvalidatorId),
     tokenManager.accounts.getTokenManager(connection, tokenManagerId),
@@ -1163,11 +850,7 @@ export const withExtendUsages = async (
       wallet.publicKey
     );
 
-    const [
-      paymentTokenAccountId,
-      feeCollectorTokenAccountId,
-      remainingAccounts,
-    ] = await withRemainingAccountsForPayment(
+    const paymentAccounts = await withRemainingAccountsForPayment(
       transaction,
       connection,
       wallet,
@@ -1175,29 +858,24 @@ export const withExtendUsages = async (
       useInvalidatorData.parsed.extensionPaymentMint,
       tokenManagerData.parsed.issuer,
       useInvalidatorData.parsed.paymentManager,
-      buySideTokenAccountId,
       {
         receiptMint: tokenManagerData.parsed.receiptMint,
         payer: options?.payer,
       }
     );
 
-    const extendUsagesIx = await usgInvalidatorProgram.methods
-      .extendUsages(new BN(usagesToAdd))
-      .accounts({
-        tokenManager: tokenManagerId,
-        useInvalidator: useInvalidatorId,
-        paymentManager: useInvalidatorData.parsed.paymentManager,
-        paymentTokenAccount: paymentTokenAccountId,
-        feeCollectorTokenAccount: feeCollectorTokenAccountId,
-        payer: wallet.publicKey,
-        payerTokenAccount: payerTokenAccountId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        cardinalPaymentManager: PAYMENT_MANAGER_ADDRESS,
-      })
-      .remainingAccounts(remainingAccounts)
-      .instruction();
-    transaction.add(extendUsagesIx);
+    transaction.add(
+      useInvalidator.instruction.extendUsages(
+        connection,
+        wallet,
+        tokenManagerId,
+        useInvalidatorData.parsed.paymentManager,
+        payerTokenAccountId,
+        useInvalidatorId,
+        usagesToAdd,
+        paymentAccounts
+      )
+    );
   }
 
   return transaction;
@@ -1209,22 +887,21 @@ export const withResetExpiration = async (
   wallet: Wallet,
   tokenManagerId: PublicKey
 ): Promise<Transaction> => {
-  const tmeInvalidatorProgram = timeInvalidatorProgram(connection, wallet);
-  const timeInvalidatorId =
-    timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
+  const [timeInvalidatorId] =
+    await timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
   const [tokenManagerData] = await Promise.all([
     tokenManager.accounts.getTokenManager(connection, tokenManagerId),
   ]);
 
   if (tokenManagerData.parsed.state === TokenManagerState.Issued) {
-    const resetExpirationIx = await tmeInvalidatorProgram.methods
-      .resetExpiration()
-      .accounts({
-        tokenManager: tokenManagerId,
-        timeInvalidator: timeInvalidatorId,
-      })
-      .instruction();
-    transaction.add(resetExpirationIx);
+    transaction.add(
+      timeInvalidator.instruction.resetExpiration(
+        connection,
+        wallet,
+        tokenManagerId,
+        timeInvalidatorId
+      )
+    );
   } else {
     console.log("Token Manager not in state issued to reset expiration");
   }
@@ -1239,25 +916,22 @@ export const withUpdateMaxExpiration = async (
   tokenManagerId: PublicKey,
   newMaxExpiration: BN
 ): Promise<Transaction> => {
-  const tmeInvalidatorProgram = timeInvalidatorProgram(connection, wallet);
-  const timeInvalidatorId =
-    timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
+  const [timeInvalidatorId] =
+    await timeInvalidator.pda.findTimeInvalidatorAddress(tokenManagerId);
   const [tokenManagerData] = await Promise.all([
     tokenManager.accounts.getTokenManager(connection, tokenManagerId),
   ]);
 
   if (tokenManagerData.parsed.state !== TokenManagerState.Invalidated) {
-    const updateExpirationIx = await tmeInvalidatorProgram.methods
-      .updateMaxExpiration({
-        newMaxExpiration: newMaxExpiration,
-      })
-      .accounts({
-        tokenManager: tokenManagerId,
-        timeInvalidator: timeInvalidatorId,
-        issuer: wallet.publicKey,
-      })
-      .instruction();
-    transaction.add(updateExpirationIx);
+    transaction.add(
+      timeInvalidator.instruction.updateMaxExpiration(
+        connection,
+        wallet,
+        timeInvalidatorId,
+        tokenManagerId,
+        newMaxExpiration
+      )
+    );
   } else {
     console.log("Token Manager not in state issued to update max expiration");
   }
@@ -1271,8 +945,7 @@ export const withTransfer = async (
   mintId: PublicKey,
   recipient = wallet.publicKey
 ): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const tokenManagerId = findTokenManagerAddress(mintId);
+  const [tokenManagerId] = await findTokenManagerAddress(mintId);
   const tokenManagerData = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
@@ -1289,32 +962,28 @@ export const withTransfer = async (
     true
   );
 
-  const remainingAccountsForKind = getRemainingAccountsForKind(
+  const remainingAccountsForKind = await getRemainingAccountsForKind(
     mintId,
     tokenManagerData.parsed.kind
   );
 
-  const remainingAccountsForTransfer = getRemainingAccountsForTransfer(
+  const remainingAccountsForTransfer = await getRemainingAccountsForTransfer(
     tokenManagerData.parsed.transferAuthority,
     tokenManagerId
   );
 
-  const transferIx = await tmManagerProgram.methods
-    .transfer()
-    .accounts({
-      tokenManager: tokenManagerId,
-      mint: mintId,
-      currentHolderTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-      recipient: recipient,
-      recipientTokenAccount: recipientTokenAccountId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .remainingAccounts([
-      ...remainingAccountsForKind,
-      ...remainingAccountsForTransfer,
-    ])
-    .instruction();
-  transaction.add(transferIx);
+  transaction.add(
+    tokenManager.instruction.transfer(
+      connection,
+      wallet,
+      tokenManagerId,
+      mintId,
+      tokenManagerData.parsed.recipientTokenAccount,
+      recipient,
+      recipientTokenAccountId,
+      [...remainingAccountsForKind, ...remainingAccountsForTransfer]
+    )
+  );
 
   return transaction;
 };
@@ -1326,28 +995,26 @@ export const withDelegate = async (
   mintId: PublicKey,
   recipient = wallet.publicKey
 ): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const tokenManagerId = findTokenManagerAddress(mintId);
+  const [tokenManagerId] = await findTokenManagerAddress(mintId);
   const tokenManagerData = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
   if (!tokenManagerData?.parsed) {
     throw "No token manager found";
   }
-  const mintManagerId = findMintManagerId(mintId);
+  const [mintManagerId] = await findMintManagerId(mintId);
 
-  const delegateIx = await tmManagerProgram.methods
-    .delegate()
-    .accounts({
-      tokenManager: tokenManagerId,
-      mint: mintId,
-      mintManager: mintManagerId,
-      recipient: recipient,
-      recipientTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .instruction();
-  transaction.add(delegateIx);
+  transaction.add(
+    tokenManager.instruction.delegate(
+      connection,
+      wallet,
+      mintId,
+      tokenManagerId,
+      mintManagerId,
+      recipient,
+      tokenManagerData.parsed.recipientTokenAccount
+    )
+  );
 
   return transaction;
 };
@@ -1359,34 +1026,31 @@ export const withUndelegate = async (
   mintId: PublicKey,
   recipient?: PublicKey
 ): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const tokenManagerId = findTokenManagerAddress(mintId);
+  const [tokenManagerId] = await findTokenManagerAddress(mintId);
   const tokenManagerData = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
   if (!tokenManagerData?.parsed) {
     throw "No token manager found";
   }
-  const mintManagerId = findMintManagerId(mintId);
+  const [mintManagerId] = await findMintManagerId(mintId);
 
   const recipientTokenAccountId = await findAta(
     mintId,
     recipient ?? wallet.publicKey,
     true
   );
-
-  const undelegateIx = await tmManagerProgram.methods
-    .undelegate()
-    .accounts({
-      tokenManager: tokenManagerId,
-      mint: mintId,
-      mintManager: mintManagerId,
-      recipient: recipient,
-      recipientTokenAccount: recipientTokenAccountId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-    })
-    .instruction();
-  transaction.add(undelegateIx);
+  transaction.add(
+    tokenManager.instruction.undelegate(
+      connection,
+      wallet,
+      mintId,
+      tokenManagerId,
+      mintManagerId,
+      recipient ?? wallet.publicKey,
+      recipientTokenAccountId
+    )
+  );
 
   return transaction;
 };
@@ -1399,104 +1063,28 @@ export const withSend = async (
   senderTokenAccountId: PublicKey,
   target: PublicKey
 ): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const tokenManagerId = findTokenManagerAddress(mintId);
+  const [tokenManagerId] = await findTokenManagerAddress(mintId);
   const tokenManagerData = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
   if (!tokenManagerData?.parsed) {
     throw "No token manager found";
   }
-  const mintManagerId = findMintManagerId(mintId);
-  const listingId = findListingAddress(mintId);
-  const checkListing = await tryGetAccount(() =>
-    getListing(connection, listingId)
-  );
-  if (checkListing) {
-    throw "Token is already listed. You need to delist the token first before sending it.";
-  }
+  const [mintManagerId] = await findMintManagerId(mintId);
 
   const targetTokenAccountId = await findAta(mintId, target, true);
-  const sendIx = await tmManagerProgram.methods
-    .send()
-    .accounts({
-      tokenManager: tokenManagerId,
-      mint: mintId,
-      mintManager: mintManagerId,
-      recipient: wallet.publicKey,
-      recipientTokenAccount: senderTokenAccountId,
-      target: target,
-      targetTokenAccount: targetTokenAccountId,
-      payer: wallet.publicKey,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-      rent: SYSVAR_RENT_PUBKEY,
-      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-    })
-    .instruction();
-  transaction.add(sendIx);
-  return transaction;
-};
-
-export const withMigrate = async (
-  transaction: Transaction,
-  connection: Connection,
-  wallet: Wallet,
-  mintId: PublicKey,
-  rulesetName: string,
-  holderTokenAccountId: PublicKey,
-  authority: PublicKey
-): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-  const currentMintManagerId = findMintManagerId(mintId);
-  const mintManagerId = findCCSMintManagerId(mintId);
-  const tokenManagerId = findTokenManagerAddress(mintId);
-  const rulesetId = findRulesetId(rulesetName);
-  const mintMetadataId = findMintMetadataId(mintId);
-
-  const migrateIx = await tmManagerProgram.methods
-    .migrate()
-    .accountsStrict({
-      currentMintManager: currentMintManagerId,
-      mintManager: mintManagerId,
-      mint: mintId,
-      mintMetadata: mintMetadataId,
-      ruleset: rulesetId,
-      tokenManager: tokenManagerId,
-      holderTokenAccount: holderTokenAccountId,
-      tokenAuthority: currentMintManagerId,
-      authority: authority,
-      payer: wallet.publicKey,
-      rent: SYSVAR_RENT_PUBKEY,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-      cardinalCreatorStandard: PROGRAM_ADDRESS,
-    })
-    .instruction();
-  transaction.add(migrateIx);
-
-  return transaction;
-};
-
-export const withReplaceInvalidator = async (
-  transaction: Transaction,
-  connection: Connection,
-  wallet: Wallet,
-  tokenManagerId: PublicKey,
-  newInvalidator: PublicKey
-): Promise<Transaction> => {
-  const tmManagerProgram = tokenManagerProgram(connection, wallet);
-
-  const replaceInvalidatorIx = await tmManagerProgram.methods
-    .replaceInvalidator(newInvalidator)
-    .accounts({
-      tokenManager: tokenManagerId,
-      invalidator: wallet.publicKey,
-    })
-    .instruction();
-
-  transaction.add(replaceInvalidatorIx);
-
+  transaction.add(
+    tokenManager.instruction.send(
+      connection,
+      wallet,
+      mintId,
+      tokenManagerId,
+      mintManagerId,
+      wallet.publicKey,
+      senderTokenAccountId,
+      target,
+      targetTokenAccountId
+    )
+  );
   return transaction;
 };

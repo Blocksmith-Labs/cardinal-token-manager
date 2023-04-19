@@ -1,26 +1,43 @@
-import type { AccountData } from "@cardinal/common";
-import { BN, BorshAccountsCoder, utils } from "@project-serum/anchor";
+import {
+  AnchorProvider,
+  BN,
+  BorshAccountsCoder,
+  Program,
+  utils,
+} from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
 import type { Connection, PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 
+import type { AccountData } from "../../utils";
 import type { TokenManagerState } from ".";
 import type {
   MintCounterData,
   MintManagerData,
+  TOKEN_MANAGER_PROGRAM,
   TokenManagerData,
   TransferReceiptData,
 } from "./constants";
-import {
-  TOKEN_MANAGER_ADDRESS,
-  TOKEN_MANAGER_IDL,
-  tokenManagerProgram,
-} from "./constants";
+import { TOKEN_MANAGER_ADDRESS, TOKEN_MANAGER_IDL } from "./constants";
 
 export const getTokenManager = async (
   connection: Connection,
   tokenManagerId: PublicKey
 ): Promise<AccountData<TokenManagerData>> => {
-  const program = tokenManagerProgram(connection);
-  const parsed = await program.account.tokenManager.fetch(tokenManagerId);
+  const provider = new AnchorProvider(
+    connection,
+    new SignerWallet(Keypair.generate()),
+    {}
+  );
+  const tokenManagerProgram = new Program<TOKEN_MANAGER_PROGRAM>(
+    TOKEN_MANAGER_IDL,
+    TOKEN_MANAGER_ADDRESS,
+    provider
+  );
+
+  const parsed = await tokenManagerProgram.account.tokenManager.fetch(
+    tokenManagerId
+  );
   return {
     parsed,
     pubkey: tokenManagerId,
@@ -30,20 +47,35 @@ export const getTokenManager = async (
 export const getTokenManagers = async (
   connection: Connection,
   tokenManagerIds: PublicKey[]
-): Promise<AccountData<TokenManagerData | null>[]> => {
-  const program = tokenManagerProgram(connection);
+): Promise<AccountData<TokenManagerData>[]> => {
+  const provider = new AnchorProvider(
+    connection,
+    new SignerWallet(Keypair.generate()),
+    {}
+  );
+  const tokenManagerProgram = new Program<TOKEN_MANAGER_PROGRAM>(
+    TOKEN_MANAGER_IDL,
+    TOKEN_MANAGER_ADDRESS,
+    provider
+  );
 
-  let tokenManagers: (TokenManagerData | null)[] = [];
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  let tokenManagers = [];
   try {
-    tokenManagers = (await program.account.tokenManager.fetchMultiple(
-      tokenManagerIds
-    )) as (TokenManagerData | null)[];
+    tokenManagers =
+      await tokenManagerProgram.account.tokenManager.fetchMultiple(
+        tokenManagerIds
+      );
   } catch (e) {
     console.log(e);
   }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   return tokenManagers.map((tm, i) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     parsed: tm,
-    pubkey: tokenManagerIds[i]!,
+    pubkey: tokenManagerIds[i],
   }));
 };
 
@@ -106,9 +138,20 @@ export const getMintManager = async (
   connection: Connection,
   mintManagerId: PublicKey
 ): Promise<AccountData<MintManagerData>> => {
-  const program = tokenManagerProgram(connection);
+  const provider = new AnchorProvider(
+    connection,
+    new SignerWallet(Keypair.generate()),
+    {}
+  );
+  const tokenManagerProgram = new Program<TOKEN_MANAGER_PROGRAM>(
+    TOKEN_MANAGER_IDL,
+    TOKEN_MANAGER_ADDRESS,
+    provider
+  );
 
-  const parsed = await program.account.mintManager.fetch(mintManagerId);
+  const parsed = await tokenManagerProgram.account.mintManager.fetch(
+    mintManagerId
+  );
   return {
     parsed,
     pubkey: mintManagerId,
@@ -119,9 +162,20 @@ export const getMintCounter = async (
   connection: Connection,
   mintCounterId: PublicKey
 ): Promise<AccountData<MintCounterData>> => {
-  const program = tokenManagerProgram(connection);
+  const provider = new AnchorProvider(
+    connection,
+    new SignerWallet(Keypair.generate()),
+    {}
+  );
+  const tokenManagerProgram = new Program<TOKEN_MANAGER_PROGRAM>(
+    TOKEN_MANAGER_IDL,
+    TOKEN_MANAGER_ADDRESS,
+    provider
+  );
 
-  const parsed = await program.account.mintCounter.fetch(mintCounterId);
+  const parsed = await tokenManagerProgram.account.mintCounter.fetch(
+    mintCounterId
+  );
   return {
     parsed,
     pubkey: mintCounterId,
@@ -177,9 +231,20 @@ export const getTransferReceipt = async (
   connection: Connection,
   transferReceiptId: PublicKey
 ): Promise<AccountData<TransferReceiptData>> => {
-  const program = tokenManagerProgram(connection);
+  const provider = new AnchorProvider(
+    connection,
+    new SignerWallet(Keypair.generate()),
+    {}
+  );
+  const tokenManagerProgram = new Program<TOKEN_MANAGER_PROGRAM>(
+    TOKEN_MANAGER_IDL,
+    TOKEN_MANAGER_ADDRESS,
+    provider
+  );
 
-  const parsed = await program.account.transferReceipt.fetch(transferReceiptId);
+  const parsed = await tokenManagerProgram.account.transferReceipt.fetch(
+    transferReceiptId
+  );
   return {
     parsed,
     pubkey: transferReceiptId,

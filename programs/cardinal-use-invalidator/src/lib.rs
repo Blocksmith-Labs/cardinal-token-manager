@@ -2,10 +2,9 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
-use anchor_lang::prelude::*;
-use instructions::*;
+use {anchor_lang::prelude::*, instructions::*};
 
-declare_id!("useZ65tbyvWpdYCLDJaegGK34Lnsi8S3jZdwx8122qp");
+declare_id!("t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE");
 
 #[program]
 pub mod cardinal_use_invalidator {

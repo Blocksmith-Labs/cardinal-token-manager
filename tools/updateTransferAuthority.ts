@@ -1,7 +1,9 @@
-import { executeTransaction } from "@cardinal/common";
 import * as anchor from "@project-serum/anchor";
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import { PublicKey } from "@solana/web3.js";
+import { Keypair, Transaction } from "@solana/web3.js";
 
+import { executeTransaction } from "./utils";
 import { withUpdateTransferAuthority } from "../src";
 import { connectionFor } from "./connection";
 
@@ -22,19 +24,18 @@ const main = async (transferAuthorityName: string, cluster = "devnet") => {
   await withUpdateTransferAuthority(
     transaction,
     connection,
-    new anchor.Wallet(wallet),
+    new SignerWallet(wallet),
     transferAuthorityName,
     new PublicKey("cpmaMZyBQiPxpeuxNsQhW7N8z1o9yaNdLgiPhWGUEiX")
   );
   try {
     await executeTransaction(
       connection,
+      new SignerWallet(wallet),
       transaction,
-      new anchor.Wallet(wallet),
       {}
     );
   } catch (e) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     console.log(`Transactionn failed: ${e}`);
   }
 };

@@ -8,14 +8,8 @@ const constants_1 = require("./constants");
  * Finds the use invalidator for this token manager.
  * @returns
  */
-const findUseInvalidatorAddress = (tokenManagerId) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(constants_1.USE_INVALIDATOR_SEED),
-      tokenManagerId.toBuffer(),
-    ],
-    constants_1.USE_INVALIDATOR_ADDRESS
-  )[0];
+const findUseInvalidatorAddress = async (tokenManagerId) => {
+    return await web3_js_1.PublicKey.findProgramAddress([anchor_1.utils.bytes.utf8.encode(constants_1.USE_INVALIDATOR_SEED), tokenManagerId.toBuffer()], constants_1.USE_INVALIDATOR_ADDRESS);
 };
 exports.findUseInvalidatorAddress = findUseInvalidatorAddress;
 //# sourceMappingURL=pda.js.map

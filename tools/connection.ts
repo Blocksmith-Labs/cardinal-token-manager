@@ -1,15 +1,9 @@
 import { Connection } from "@solana/web3.js";
-import * as dotenv from "dotenv";
-
-dotenv.config();
 
 const networkURLs: { [key: string]: string } = {
   ["mainnet-beta"]:
-    process.env.MAINNET_PRIMARY ||
-    "https://explorer-api.mainnet-beta.solana.com/",
-  mainnet:
-    process.env.MAINNET_PRIMARY ||
-    "https://explorer-api.mainnet-beta.solana.com/",
+    process.env.MAINNET_PRIMARY || "https://ssc-dao.genesysgo.net/",
+  mainnet: process.env.MAINNET_PRIMARY || "https://ssc-dao.genesysgo.net/",
   devnet: "https://api.devnet.solana.com/",
   testnet: "https://api.testnet.solana.com/",
   localnet: "http://localhost:8899/",

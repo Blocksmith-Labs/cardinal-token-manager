@@ -1,28 +1,15 @@
-import type { AccountData } from "@cardinal/common";
-import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
-import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
-import type { AccountMeta, Connection } from "@solana/web3.js";
-import { PublicKey, Transaction } from "@solana/web3.js";
-import { TokenManagerData } from ".";
+import type { Wallet } from "@saberhq/solana-contrib";
+import type { AccountMeta, Connection, Transaction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import type { AccountData } from "../..";
+import type { TokenManagerData } from ".";
 import { TokenManagerKind } from ".";
-export declare const getRemainingAccountsForKind: (mintId: PublicKey, tokenManagerKind: TokenManagerKind) => AccountMeta[];
-export declare const getRemainingAccountsForUnissue: (tokenManagerId: PublicKey, tokenManagerData: TokenManagerData, metadata: Metadata | null) => AccountMeta[];
-/**
- * Convenience method to get remaining accounts for invalidation
- * NOTE: This ignores token account creation and assumes that is handled outside. Use withRemainingAccountsForInvalidate
- * to include token account creation in the current transaction
- * @param connection
- * @param mintId
- * @returns
- */
-export declare const getRemainingAccountsForInvalidate: (connection: Connection, wallet: Wallet, mintId: PublicKey) => Promise<AccountMeta[]>;
-export declare const withRemainingAccountsForInvalidate: (transaction: Transaction, connection: Connection, wallet: Wallet, mintId: PublicKey, tokenManagerData: AccountData<TokenManagerData>, recipientTokenAccountOwnerId: PublicKey, metadata: Metadata | null) => Promise<AccountMeta[]>;
-export declare const withRemainingAccountsForReturn: (transaction: Transaction, connection: Connection, wallet: Wallet, tokenManagerData: AccountData<TokenManagerData>, recipientTokenAccountOwnerId?: PublicKey, rulesetId?: PublicKey) => Promise<AccountMeta[]>;
-export declare const getRemainingAccountsForTransfer: (transferAuthority: PublicKey | null, tokenManagerId: PublicKey) => AccountMeta[];
-export declare const remainingAccountForProgrammable: (mintId: PublicKey, fromTokenAccountId: PublicKey, toTokenAccountId: PublicKey, rulesetId: PublicKey | undefined) => AccountMeta[];
-export declare const remainingAccountForProgrammableUnlockAndTransfer: (recipient: PublicKey, payer: PublicKey, mintId: PublicKey, fromTokenAccountId: PublicKey, rulesetId: PublicKey) => AccountMeta[];
-export declare const getRemainingAccountsForIssue: (tokenManagerKind: TokenManagerKind, mintId: PublicKey, issuerTokenAccountId: PublicKey, tokenManagerTokenAccountId: PublicKey, rulesetId?: PublicKey) => AccountMeta[];
-export declare const getRemainingAccountsForClaim: (tokenManagerData: AccountData<TokenManagerData>, recipientTokenAccountId: PublicKey, metadata: Metadata | null, claimReceiptId?: PublicKey) => AccountMeta[];
-export declare function findTokenRecordId(mint: PublicKey, token: PublicKey): PublicKey;
-export declare const findRuleSetId: (authority: PublicKey, name: string) => PublicKey;
+export declare const getRemainingAccountsForKind: (mintId: PublicKey, tokenManagerKind: TokenManagerKind) => Promise<AccountMeta[]>;
+export declare const withRemainingAccountsForPayment: (transaction: Transaction, connection: Connection, wallet: Wallet, mint: PublicKey, paymentMint: PublicKey, issuerId: PublicKey, paymentManagerId: PublicKey, options?: {
+    payer?: PublicKey;
+    receiptMint?: PublicKey | null;
+}) => Promise<[PublicKey, PublicKey, AccountMeta[]]>;
+export declare const withRemainingAccountsForReturn: (transaction: Transaction, connection: Connection, wallet: Wallet, tokenManagerData: AccountData<TokenManagerData>, allowOwnerOffCurve?: boolean) => Promise<AccountMeta[]>;
+export declare const withRemainingAccountsForHandlePaymentWithRoyalties: (transaction: Transaction, connection: Connection, wallet: Wallet, mint: PublicKey, paymentMint: PublicKey, excludeCreators?: string[]) => Promise<AccountMeta[]>;
+export declare const getRemainingAccountsForTransfer: (transferAuthority: PublicKey | null, tokenManagerId: PublicKey) => Promise<AccountMeta[]>;
 //# sourceMappingURL=utils.d.ts.map

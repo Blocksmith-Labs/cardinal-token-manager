@@ -1,10 +1,8 @@
-use crate::errors::ErrorCode;
-use crate::state::*;
-use anchor_lang::prelude::*;
-use anchor_lang::AccountsClose;
-use cardinal_token_manager::state::InvalidationType;
-use cardinal_token_manager::state::TokenManager;
-use cardinal_token_manager::state::TokenManagerState;
+use {
+    crate::{errors::ErrorCode, state::*},
+    anchor_lang::{prelude::*, AccountsClose},
+    cardinal_token_manager::state::{InvalidationType, TokenManager, TokenManagerState},
+};
 
 #[derive(Accounts)]
 pub struct CloseCtx<'info> {

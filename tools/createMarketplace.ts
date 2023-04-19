@@ -1,11 +1,11 @@
-import { executeTransaction, tryGetAccount } from "@cardinal/common";
-import { utils, Wallet } from "@project-serum/anchor";
-import type { PublicKey } from "@solana/web3.js";
-import { Keypair, Transaction } from "@solana/web3.js";
+import * as anchor from "@project-serum/anchor";
 
-import { withInitMarketplace } from "../src";
-import { getMarketplaceByName } from "../src/programs/transferAuthority/accounts";
+import { tryGetAccount, withInitMarketplace } from "../src";
 import { connectionFor } from "./connection";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { getMarketplaceByName } from "../src/programs/transferAuthority/accounts";
+import { executeTransaction } from "./utils";
 
 export type MarketplaceParams = {
   name: string;
@@ -15,7 +15,7 @@ export type MarketplaceParams = {
 };
 
 const wallet = Keypair.fromSecretKey(
-  utils.bytes.bs58.decode(utils.bytes.bs58.encode([]))
+  anchor.utils.bytes.bs58.decode(anchor.utils.bytes.bs58.encode([]))
 ); // your wallet's secret key // your wallet's secret key
 
 const main = async (params: MarketplaceParams, cluster = "devnet") => {
@@ -25,15 +25,20 @@ const main = async (params: MarketplaceParams, cluster = "devnet") => {
   await withInitMarketplace(
     transaction,
     connection,
-    new Wallet(wallet),
+    new SignerWallet(wallet),
     params.name,
+    params.transferAuthorityName,
     params.paymentManagerName
   );
 
   try {
-    await executeTransaction(connection, transaction, new Wallet(wallet), {});
+    await executeTransaction(
+      connection,
+      new SignerWallet(wallet),
+      transaction,
+      {}
+    );
   } catch (e) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     console.log(`Transactionn failed: ${e}`);
   }
 

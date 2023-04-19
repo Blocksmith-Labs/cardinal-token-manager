@@ -7,11 +7,11 @@ import { USE_INVALIDATOR_ADDRESS, USE_INVALIDATOR_SEED } from "./constants";
  * Finds the use invalidator for this token manager.
  * @returns
  */
-export const findUseInvalidatorAddress = (
+export const findUseInvalidatorAddress = async (
   tokenManagerId: PublicKey
-): PublicKey => {
-  return PublicKey.findProgramAddressSync(
+): Promise<[PublicKey, number]> => {
+  return await PublicKey.findProgramAddress(
     [utils.bytes.utf8.encode(USE_INVALIDATOR_SEED), tokenManagerId.toBuffer()],
     USE_INVALIDATOR_ADDRESS
-  )[0];
+  );
 };

@@ -1,24 +1,25 @@
 import {
-  createMintIxs,
-  findMintEditionId,
-  findMintMetadataId,
-  tryGetAccount,
-} from "@cardinal/common";
-import {
-  createCreateMasterEditionV3Instruction,
-  createCreateMetadataAccountV3Instruction,
+  CreateMasterEditionV3,
+  CreateMetadataV2,
+  Creator,
+  DataV2,
+  MasterEdition,
+  Metadata,
 } from "@metaplex-foundation/mpl-token-metadata";
 import { BN, utils } from "@project-serum/anchor";
+import { SignerWallet } from "@saberhq/solana-contrib";
+import { PublicKey } from "@solana/web3.js";
 import {
   Keypair,
-  PublicKey,
   sendAndConfirmRawTransaction,
   Transaction,
 } from "@solana/web3.js";
-
+import { tryGetAccount } from "../src";
 import { getTokenManager } from "../src/programs/tokenManager/accounts";
 import { findTokenManagerAddress } from "../src/programs/tokenManager/pda";
 import { connectionFor } from "./connection";
+
+import { createMintTransaction } from "./utils";
 
 const wallet = Keypair.fromSecretKey(
   utils.bytes.bs58.decode(process.env.AIRDROP_KEY || "")
@@ -37,12 +38,14 @@ export const airdropToTokenManagerIssuers = async (
   const connection = connectionFor(cluster);
 
   // find token managers
-  const tokenManagerIds = mintIds.map((mint) => findTokenManagerAddress(mint));
+  const tokenManagerIds = await Promise.all(
+    mintIds.map((mint) => findTokenManagerAddress(mint))
+  );
 
   const tokenManagerDatas = (
     await Promise.all(
       tokenManagerIds.map((tmId) =>
-        tryGetAccount(() => getTokenManager(connection, tmId))
+        tryGetAccount(() => getTokenManager(connection, tmId[0]))
       )
     )
   ).filter((tm) => !!tm);
@@ -63,73 +66,69 @@ export const airdropToTokenManagerIssuers = async (
     try {
       const masterEditionTransaction = new Transaction();
       const masterEditionMint = Keypair.generate();
-      const [ixs] = await createMintIxs(
+      const [masterEditionTokenAccountId] = await createMintTransaction(
+        masterEditionTransaction,
         connection,
-        masterEditionMint.publicKey,
+        new SignerWallet(wallet),
         wallet.publicKey,
-        { target: issuer }
+        masterEditionMint.publicKey,
+        1,
+        wallet.publicKey,
+        issuer // receiver
       );
-      masterEditionTransaction.instructions = [
-        ...masterEditionTransaction.instructions,
-        ...ixs,
-      ];
 
-      const masterEditionMetadataId = findMintMetadataId(
+      const masterEditionMetadataId = await Metadata.getPDA(
         masterEditionMint.publicKey
       );
-      const metadataIx = createCreateMetadataAccountV3Instruction(
+      const metadataTx = new CreateMetadataV2(
+        { feePayer: wallet.publicKey },
         {
           metadata: masterEditionMetadataId,
+          metadataData: new DataV2({
+            name: metadata.name,
+            symbol: metadata.symbol,
+            uri: metadata.uri,
+            sellerFeeBasisPoints: 0,
+            creators: [
+              new Creator({
+                address: wallet.publicKey.toString(),
+                verified: true,
+                share: 100,
+              }),
+            ],
+            collection: null,
+            uses: null,
+          }),
           updateAuthority: wallet.publicKey,
           mint: masterEditionMint.publicKey,
           mintAuthority: wallet.publicKey,
-          payer: wallet.publicKey,
-        },
-        {
-          createMetadataAccountArgsV3: {
-            data: {
-              name: metadata.name,
-              symbol: metadata.symbol,
-              uri: metadata.uri,
-              sellerFeeBasisPoints: 0,
-              creators: [
-                {
-                  address: wallet.publicKey,
-                  verified: true,
-                  share: 100,
-                },
-              ],
-              collection: null,
-              uses: null,
-            },
-            isMutable: true,
-            collectionDetails: null,
-          },
         }
       );
 
-      const masterEditionId = findMintEditionId(masterEditionMint.publicKey);
-      const masterEditionIx = createCreateMasterEditionV3Instruction(
+      const masterEditionId = await MasterEdition.getPDA(
+        masterEditionMint.publicKey
+      );
+      const masterEditionTx = new CreateMasterEditionV3(
+        {
+          feePayer: wallet.publicKey,
+          recentBlockhash: (await connection.getRecentBlockhash("max"))
+            .blockhash,
+        },
         {
           edition: masterEditionId,
           metadata: masterEditionMetadataId,
           updateAuthority: wallet.publicKey,
           mint: masterEditionMint.publicKey,
           mintAuthority: wallet.publicKey,
-          payer: wallet.publicKey,
-        },
-        {
-          createMasterEditionArgs: {
-            maxSupply: new BN(0),
-          },
+          maxSupply: new BN(0),
         }
       );
 
       const transaction = new Transaction();
       transaction.instructions = [
         ...masterEditionTransaction.instructions,
-        metadataIx,
-        masterEditionIx,
+        ...metadataTx.instructions,
+        ...masterEditionTx.instructions,
       ];
       transaction.feePayer = wallet.publicKey;
       transaction.recentBlockhash = (
@@ -140,9 +139,7 @@ export const airdropToTokenManagerIssuers = async (
         commitment: "confirmed",
       });
       console.log(
-        `Airdropped token to ${
-          issuer ? issuer.toString() : ""
-        } wallet with mintId=(${masterEditionMint.publicKey.toString()}) masterEditionId=(${masterEditionId.toString()}) metadataId=(${masterEditionMetadataId.toString()}))\n`
+        `Airdropped token to ${issuer?.toString()} wallet with mintId=(${masterEditionMint.publicKey.toString()}) masterEditionId=(${masterEditionId.toString()}) metadataId=(${masterEditionMetadataId.toString()}) tokenAccount=(${masterEditionTokenAccountId.toString()})\n`
       );
       allMintIds.push(masterEditionMint.publicKey);
     } catch (e) {
