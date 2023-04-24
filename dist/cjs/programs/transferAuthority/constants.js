@@ -4,7 +4,7 @@ exports.DEFAULT_TRANSFER_AUTHORITY_NAME = exports.WSOL_MINT = exports.TRANSFER_A
 const tslib_1 = require("tslib");
 const web3_js_1 = require("@solana/web3.js");
 const TRANSFER_AUTHORITY_TYPES = tslib_1.__importStar(require("../../idl/cardinal_transfer_authority"));
-exports.TRANSFER_AUTHORITY_ADDRESS = new web3_js_1.PublicKey("trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW");
+exports.TRANSFER_AUTHORITY_ADDRESS = new web3_js_1.PublicKey("638EtvgGQTmc2jc9SdAPtLSCjSXRrkyBfSd54xP2pquZ");
 exports.TRANSFER_AUTHORITY_SEED = "transfer-authority";
 exports.MARKETPLACE_SEED = "marketplace";
 exports.LISTING_SEED = "listing";

@@ -4,7 +4,7 @@ import { PublicKey } from "@solana/web3.js";
 import * as TRANSFER_AUTHORITY_TYPES from "../../idl/cardinal_transfer_authority";
 
 export const TRANSFER_AUTHORITY_ADDRESS = new PublicKey(
-  "trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW"
+  "638EtvgGQTmc2jc9SdAPtLSCjSXRrkyBfSd54xP2pquZ"
 );
 
 export const TRANSFER_AUTHORITY_SEED = "transfer-authority";

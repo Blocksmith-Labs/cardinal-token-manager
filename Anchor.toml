@@ -6,32 +6,12 @@ test = "yarn mocha tests/**/*.spec.ts"
 
 [provider]
 cluster = "localnet"
-wallet = "./tests/test-key.json"
-
-[programs.mainnet]
-cardinal_token_manager = "3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k"
-cardinal_paid_claim_approver = "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
-cardinal_time_invalidator = "t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK"
-cardinal_use_invalidator = "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
-cardinal_payment_manager = 'pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV'
-
-[programs.devnet]
-cardinal_token_manager = "3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k"
-cardinal_paid_claim_approver = "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
-cardinal_time_invalidator = "t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK"
-cardinal_use_invalidator = "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
-cardinal_payment_manager = 'pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV'
-
-[programs.testnet]
-cardinal_token_manager = "3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k"
-cardinal_paid_claim_approver = "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
-cardinal_time_invalidator = "t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK"
-cardinal_use_invalidator = "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
-cardinal_payment_manager = 'pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV'
+wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-cardinal_token_manager = "3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k"
-cardinal_paid_claim_approver = "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
-cardinal_time_invalidator = "t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK"
-cardinal_use_invalidator = "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
-cardinal_payment_manager = 'pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV'
+cardinal_token_manager = "9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh"
+cardinal_paid_claim_approver = "ASARc3C85tapTVLHLfDMdzxiNCjJDM4C7ZmEZNJ5g9FV"
+cardinal_time_invalidator = "5Jd9DPJ7Q99dNBRso8Xm1ZE215GRjbtkdPEz8U5QWZfU"
+cardinal_use_invalidator = "7Qt3zVnqXuxqtzZy8iMyhnFfHdcv2UdqweoHvHKtiah1"
+cardinal_payment_manager = 'tzVYw3v7AHVXWdVTEQS4uwM5woPK3NJwBELAE9Mv4tW'
+cardinal_transfer_authority = '638EtvgGQTmc2jc9SdAPtLSCjSXRrkyBfSd54xP2pquZ'

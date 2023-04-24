@@ -4,7 +4,7 @@ exports.CRANK_KEY = exports.TokenManagerState = exports.InvalidationType = expor
 const tslib_1 = require("tslib");
 const web3_js_1 = require("@solana/web3.js");
 const TOKEN_MANAGER_TYPES = tslib_1.__importStar(require("../../idl/cardinal_token_manager"));
-exports.TOKEN_MANAGER_ADDRESS = new web3_js_1.PublicKey("3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k");
+exports.TOKEN_MANAGER_ADDRESS = new web3_js_1.PublicKey("9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh");
 exports.MINT_COUNTER_SEED = "mint-counter";
 exports.MINT_MANAGER_SEED = "mint-manager";
 exports.TRANSFER_RECEIPT_SEED = "transfer-receipt";

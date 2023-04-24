@@ -10,12 +10,12 @@ install:
 test-keys:
 	mkdir -p target/deploy
 	cp -r tests/test-keypairs/* target/deploy
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k/$$(solana-keygen pubkey tests/test-keypairs/cardinal_token_manager-keypair.json)/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW/$$(solana-keygen pubkey tests/test-keypairs/cardinal_paid_claim_approver-keypair.json)/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK/$$(solana-keygen pubkey tests/test-keypairs/cardinal_time_invalidator-keypair.json)/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE/$$(solana-keygen pubkey tests/test-keypairs/cardinal_use_invalidator-keypair.json)/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV/$$(solana-keygen pubkey tests/test-keypairs/cardinal_payment_manager-keypair.json)/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW/$$(solana-keygen pubkey tests/test-keypairs/cardinal_transfer_authority-keypair.json)/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh/$$(solana-keygen pubkey tests/test-keypairs/cardinal_token_manager-keypair.json)/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/ASARc3C85tapTVLHLfDMdzxiNCjJDM4C7ZmEZNJ5g9FV/$$(solana-keygen pubkey tests/test-keypairs/cardinal_paid_claim_approver-keypair.json)/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/5Jd9DPJ7Q99dNBRso8Xm1ZE215GRjbtkdPEz8U5QWZfU/$$(solana-keygen pubkey tests/test-keypairs/cardinal_time_invalidator-keypair.json)/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/7Qt3zVnqXuxqtzZy8iMyhnFfHdcv2UdqweoHvHKtiah1/$$(solana-keygen pubkey tests/test-keypairs/cardinal_use_invalidator-keypair.json)/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/tzVYw3v7AHVXWdVTEQS4uwM5woPK3NJwBELAE9Mv4tW/$$(solana-keygen pubkey tests/test-keypairs/cardinal_payment_manager-keypair.json)/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/638EtvgGQTmc2jc9SdAPtLSCjSXRrkyBfSd54xP2pquZ/$$(solana-keygen pubkey tests/test-keypairs/cardinal_transfer_authority-keypair.json)/g" {} +
 
 build:
 	anchor build
@@ -39,12 +39,12 @@ test:
 	anchor test --skip-local-validator --skip-build --skip-deploy --provider.cluster localnet
 
 clean-test-keys:
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_token_manager-keypair.json)/3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_paid_claim_approver-keypair.json)/4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_time_invalidator-keypair.json)/t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_use_invalidator-keypair.json)/t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_payment_manager-keypair.json)/pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV/g" {} +
-	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_transfer_authority-keypair.json)/trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_token_manager-keypair.json)/9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_paid_claim_approver-keypair.json)/ASARc3C85tapTVLHLfDMdzxiNCjJDM4C7ZmEZNJ5g9FV/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_time_invalidator-keypair.json)/5Jd9DPJ7Q99dNBRso8Xm1ZE215GRjbtkdPEz8U5QWZfU/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_use_invalidator-keypair.json)/7Qt3zVnqXuxqtzZy8iMyhnFfHdcv2UdqweoHvHKtiah1/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_payment_manager-keypair.json)/tzVYw3v7AHVXWdVTEQS4uwM5woPK3NJwBELAE9Mv4tW/g" {} +
+	LC_ALL=C find programs src -type f -exec sed -i '' -e "s/$$(solana-keygen pubkey tests/test-keypairs/cardinal_transfer_authority-keypair.json)/638EtvgGQTmc2jc9SdAPtLSCjSXRrkyBfSd54xP2pquZ/g" {} +
 
 stop:
 	pkill solana-test-validator

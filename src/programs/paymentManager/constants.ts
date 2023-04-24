@@ -6,7 +6,7 @@ import * as PAYMENT_MANAGER_TYPES from "../../idl/cardinal_payment_manager";
 export const BASIS_POINTS_DIVISOR = 10000;
 
 export const PAYMENT_MANAGER_ADDRESS = new PublicKey(
-  "pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV"
+  "tzVYw3v7AHVXWdVTEQS4uwM5woPK3NJwBELAE9Mv4tW"
 );
 
 export const PAYMENT_MANAGER_SEED = "payment-manager";

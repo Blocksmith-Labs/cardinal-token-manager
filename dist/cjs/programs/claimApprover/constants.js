@@ -4,7 +4,7 @@ exports.CLAIM_APPROVER_IDL = exports.CLAIM_APPROVER_SEED = exports.CLAIM_APPROVE
 const tslib_1 = require("tslib");
 const web3_js_1 = require("@solana/web3.js");
 const CLAIM_APPROVER_TYPES = tslib_1.__importStar(require("../../idl/cardinal_paid_claim_approver"));
-exports.CLAIM_APPROVER_ADDRESS = new web3_js_1.PublicKey("4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW");
+exports.CLAIM_APPROVER_ADDRESS = new web3_js_1.PublicKey("ASARc3C85tapTVLHLfDMdzxiNCjJDM4C7ZmEZNJ5g9FV");
 exports.CLAIM_APPROVER_SEED = "paid-claim-approver";
 exports.CLAIM_APPROVER_IDL = CLAIM_APPROVER_TYPES.IDL;
 //# sourceMappingURL=constants.js.map

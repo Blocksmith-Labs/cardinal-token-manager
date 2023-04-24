@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import * as TOKEN_MANAGER_TYPES from "../../idl/cardinal_token_manager";
-export const TOKEN_MANAGER_ADDRESS = new PublicKey("3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k");
+export const TOKEN_MANAGER_ADDRESS = new PublicKey("9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh");
 export const MINT_COUNTER_SEED = "mint-counter";
 export const MINT_MANAGER_SEED = "mint-manager";
 export const TRANSFER_RECEIPT_SEED = "transfer-receipt";
