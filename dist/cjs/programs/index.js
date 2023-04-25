@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useInvalidator =
+exports.paymentManager =
+  exports.useInvalidator =
   exports.transferAuthority =
   exports.tokenManager =
   exports.timeInvalidator =
@@ -14,4 +15,5 @@ exports.transferAuthority = tslib_1.__importStar(
   require("./transferAuthority")
 );
 exports.useInvalidator = tslib_1.__importStar(require("./useInvalidator"));
+exports.paymentManager = tslib_1.__importStar(require("./paymentManager"));
 //# sourceMappingURL=index.js.map
