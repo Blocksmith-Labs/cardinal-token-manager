@@ -481,7 +481,7 @@ export const remainingAccountForProgrammable = (
       isWritable: false,
     },
     {
-      pubkey: rulesetId ?? TOKEN_MANAGER_ADDRESS,
+      pubkey: rulesetId ?? METADATA_PROGRAM_ID,
       isSigner: false,
       isWritable: false,
     },
