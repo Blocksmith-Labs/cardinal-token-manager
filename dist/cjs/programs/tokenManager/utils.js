@@ -287,7 +287,7 @@ const remainingAccountForProgrammable = (mintId, fromTokenAccountId, toTokenAcco
             isWritable: false,
         },
         {
-            pubkey: rulesetId !== null && rulesetId !== void 0 ? rulesetId : _1.TOKEN_MANAGER_ADDRESS,
+            pubkey: rulesetId !== null && rulesetId !== void 0 ? rulesetId : common_1.METADATA_PROGRAM_ID,
             isSigner: false,
             isWritable: false,
         },

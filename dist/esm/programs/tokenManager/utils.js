@@ -3,7 +3,9 @@ import { PREFIX as TOKEN_AUTH_RULESET_PREFIX, PROGRAM_ID as TOKEN_AUTH_RULES_ID,
 import { Metadata, TokenStandard, } from "@metaplex-foundation/mpl-token-metadata";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAccount, getAssociatedTokenAddressSync, } from "@solana/spl-token";
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction, } from "@solana/web3.js";
-import { CRANK_KEY, InvalidationType, TOKEN_MANAGER_ADDRESS, TOKEN_MANAGER_IDL, TokenManagerKind, TokenManagerState, } from ".";
+import { CRANK_KEY, InvalidationType, 
+// TOKEN_MANAGER_ADDRESS,
+TOKEN_MANAGER_IDL, TokenManagerKind, TokenManagerState, } from ".";
 import { findMintManagerId, findTokenManagerAddress, findTransferReceiptId, } from "./pda";
 export const getRemainingAccountsForKind = (mintId, tokenManagerKind) => {
     if (tokenManagerKind === TokenManagerKind.Managed ||
@@ -278,7 +280,7 @@ export const remainingAccountForProgrammable = (mintId, fromTokenAccountId, toTo
             isWritable: false,
         },
         {
-            pubkey: rulesetId !== null && rulesetId !== void 0 ? rulesetId : TOKEN_MANAGER_ADDRESS,
+            pubkey: rulesetId !== null && rulesetId !== void 0 ? rulesetId : METADATA_PROGRAM_ID,
             isSigner: false,
             isWritable: false,
         },
