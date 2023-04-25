@@ -1,5 +1,5 @@
 export type CardinalTransferAuthority = {
-  version: "1.7.4";
+  version: "4.4.0";
   name: "cardinal_transfer_authority";
   instructions: [
     {
@@ -214,7 +214,17 @@ export type CardinalTransferAuthority = {
       name: "updateListing";
       accounts: [
         {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "listing";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "listerMintTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -247,11 +257,6 @@ export type CardinalTransferAuthority = {
           isSigner: false;
         },
         {
-          name: "transfer";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "listing";
           isMut: true;
           isSigner: false;
@@ -272,11 +277,6 @@ export type CardinalTransferAuthority = {
           isSigner: false;
         },
         {
-          name: "buyerPaymentTokenAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "buyerMintTokenAccount";
           isMut: true;
           isSigner: false;
@@ -285,6 +285,16 @@ export type CardinalTransferAuthority = {
           name: "buyer";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "payerPaymentTokenAccount";
+          isMut: true;
+          isSigner: false;
         },
         {
           name: "marketplace";
@@ -313,7 +323,7 @@ export type CardinalTransferAuthority = {
         },
         {
           name: "paymentMint";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -322,9 +332,9 @@ export type CardinalTransferAuthority = {
           isSigner: false;
         },
         {
-          name: "payer";
+          name: "feeCollector";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "cardinalPaymentManager";
@@ -352,23 +362,35 @@ export type CardinalTransferAuthority = {
           isSigner: false;
         },
         {
-          name: "rent";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "instructions";
           isMut: false;
           isSigner: false;
         }
       ];
-      args: [];
+      args: [
+        {
+          name: "ix";
+          type: {
+            defined: "AcceptListingIx";
+          };
+        }
+      ];
     },
     {
       name: "removeListing";
       accounts: [
         {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "listing";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "listerMintTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -384,16 +406,6 @@ export type CardinalTransferAuthority = {
         },
         {
           name: "mintManager";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenManager";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "listerTokenAccount";
           isMut: true;
           isSigner: false;
         },
@@ -416,6 +428,11 @@ export type CardinalTransferAuthority = {
         {
           name: "marketplace";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "paymentManager";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -665,10 +682,6 @@ export type CardinalTransferAuthority = {
             type: "string";
           },
           {
-            name: "transferAuthority";
-            type: "publicKey";
-          },
-          {
             name: "paymentManager";
             type: "publicKey";
           },
@@ -746,159 +759,13 @@ export type CardinalTransferAuthority = {
   ];
   types: [
     {
-      name: "AcceptListingCtx";
+      name: "AcceptListingIx";
       type: {
         kind: "struct";
         fields: [
           {
-            name: "transferAuthority";
-            type: {
-              defined: "Account<'info,TransferAuthority>";
-            };
-          },
-          {
-            name: "transferReceipt";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "transfer";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "listing";
-            type: {
-              defined: "Account<'info,Listing>";
-            };
-          },
-          {
-            name: "listerPaymentTokenAccount";
-            type: {
-              defined: "Account<'info,TokenAccount>";
-            };
-          },
-          {
-            name: "listerMintTokenAccount";
-            type: {
-              defined: "Account<'info,TokenAccount>";
-            };
-          },
-          {
-            name: "lister";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "buyerPaymentTokenAccount";
-            type: {
-              defined: "Account<'info,TokenAccount>";
-            };
-          },
-          {
-            name: "buyerMintTokenAccount";
-            type: {
-              defined: "Account<'info,TokenAccount>";
-            };
-          },
-          {
-            name: "buyer";
-            type: {
-              defined: "Signer<'info>";
-            };
-          },
-          {
-            name: "marketplace";
-            type: {
-              defined: "Account<'info,Marketplace>";
-            };
-          },
-          {
-            name: "tokenManager";
-            type: {
-              defined: "Account<'info,TokenManager>";
-            };
-          },
-          {
-            name: "mint";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "mintMetadataInfo";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "paymentManager";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "paymentMint";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "feeCollectorTokenAccount";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
-          },
-          {
-            name: "payer";
-            type: {
-              defined: "Signer<'info>";
-            };
-          },
-          {
-            name: "cardinalPaymentManager";
-            type: {
-              defined: "Program<'info,CardinalPaymentManager>";
-            };
-          },
-          {
-            name: "cardinalTokenManager";
-            type: {
-              defined: "Program<'info,CardinalTokenManager>";
-            };
-          },
-          {
-            name: "associatedTokenProgram";
-            type: {
-              defined: "Program<'info,AssociatedToken>";
-            };
-          },
-          {
-            name: "tokenProgram";
-            type: {
-              defined: "Program<'info,Token>";
-            };
-          },
-          {
-            name: "systemProgram";
-            type: {
-              defined: "Program<'info,System>";
-            };
-          },
-          {
-            name: "rent";
-            type: {
-              defined: "Sysvar<'info,Rent>";
-            };
-          },
-          {
-            name: "instructions";
-            type: {
-              defined: "UncheckedAccount<'info>";
-            };
+            name: "paymentAmount";
+            type: "u64";
           }
         ];
       };
@@ -949,10 +816,6 @@ export type CardinalTransferAuthority = {
             type: "string";
           },
           {
-            name: "paymentManager";
-            type: "publicKey";
-          },
-          {
             name: "authority";
             type: "publicKey";
           },
@@ -963,10 +826,6 @@ export type CardinalTransferAuthority = {
                 vec: "publicKey";
               };
             };
-          },
-          {
-            name: "transferAuthority";
-            type: "publicKey";
           }
         ];
       };
@@ -976,10 +835,6 @@ export type CardinalTransferAuthority = {
       type: {
         kind: "struct";
         fields: [
-          {
-            name: "transferAuthority";
-            type: "publicKey";
-          },
           {
             name: "paymentManager";
             type: "publicKey";
@@ -1190,12 +1045,27 @@ export type CardinalTransferAuthority = {
       code: 6023;
       name: "TokenNotDelegated";
       msg: "Token must be delegated";
+    },
+    {
+      code: 6024;
+      name: "ListingChanged";
+      msg: "Listing payment amount or mint has changed";
+    },
+    {
+      code: 6025;
+      name: "InvalidRemainingAccountsSize";
+      msg: "Invalid remaining accounts size";
+    },
+    {
+      code: 6026;
+      name: "InvalidPayerPaymentTokenAccount";
+      msg: "Invalid payer payment token account";
     }
   ];
 };
 
 export const IDL: CardinalTransferAuthority = {
-  version: "1.7.4",
+  version: "4.4.0",
   name: "cardinal_transfer_authority",
   instructions: [
     {
@@ -1410,7 +1280,17 @@ export const IDL: CardinalTransferAuthority = {
       name: "updateListing",
       accounts: [
         {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "listing",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "listerMintTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1443,11 +1323,6 @@ export const IDL: CardinalTransferAuthority = {
           isSigner: false,
         },
         {
-          name: "transfer",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "listing",
           isMut: true,
           isSigner: false,
@@ -1468,11 +1343,6 @@ export const IDL: CardinalTransferAuthority = {
           isSigner: false,
         },
         {
-          name: "buyerPaymentTokenAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "buyerMintTokenAccount",
           isMut: true,
           isSigner: false,
@@ -1481,6 +1351,16 @@ export const IDL: CardinalTransferAuthority = {
           name: "buyer",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "payerPaymentTokenAccount",
+          isMut: true,
+          isSigner: false,
         },
         {
           name: "marketplace",
@@ -1509,7 +1389,7 @@ export const IDL: CardinalTransferAuthority = {
         },
         {
           name: "paymentMint",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1518,9 +1398,9 @@ export const IDL: CardinalTransferAuthority = {
           isSigner: false,
         },
         {
-          name: "payer",
+          name: "feeCollector",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "cardinalPaymentManager",
@@ -1548,23 +1428,35 @@ export const IDL: CardinalTransferAuthority = {
           isSigner: false,
         },
         {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "instructions",
           isMut: false,
           isSigner: false,
         },
       ],
-      args: [],
+      args: [
+        {
+          name: "ix",
+          type: {
+            defined: "AcceptListingIx",
+          },
+        },
+      ],
     },
     {
       name: "removeListing",
       accounts: [
         {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "listing",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "listerMintTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1580,16 +1472,6 @@ export const IDL: CardinalTransferAuthority = {
         },
         {
           name: "mintManager",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenManager",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "listerTokenAccount",
           isMut: true,
           isSigner: false,
         },
@@ -1612,6 +1494,11 @@ export const IDL: CardinalTransferAuthority = {
         {
           name: "marketplace",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "paymentManager",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1861,10 +1748,6 @@ export const IDL: CardinalTransferAuthority = {
             type: "string",
           },
           {
-            name: "transferAuthority",
-            type: "publicKey",
-          },
-          {
             name: "paymentManager",
             type: "publicKey",
           },
@@ -1942,159 +1825,13 @@ export const IDL: CardinalTransferAuthority = {
   ],
   types: [
     {
-      name: "AcceptListingCtx",
+      name: "AcceptListingIx",
       type: {
         kind: "struct",
         fields: [
           {
-            name: "transferAuthority",
-            type: {
-              defined: "Account<'info,TransferAuthority>",
-            },
-          },
-          {
-            name: "transferReceipt",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "transfer",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "listing",
-            type: {
-              defined: "Account<'info,Listing>",
-            },
-          },
-          {
-            name: "listerPaymentTokenAccount",
-            type: {
-              defined: "Account<'info,TokenAccount>",
-            },
-          },
-          {
-            name: "listerMintTokenAccount",
-            type: {
-              defined: "Account<'info,TokenAccount>",
-            },
-          },
-          {
-            name: "lister",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "buyerPaymentTokenAccount",
-            type: {
-              defined: "Account<'info,TokenAccount>",
-            },
-          },
-          {
-            name: "buyerMintTokenAccount",
-            type: {
-              defined: "Account<'info,TokenAccount>",
-            },
-          },
-          {
-            name: "buyer",
-            type: {
-              defined: "Signer<'info>",
-            },
-          },
-          {
-            name: "marketplace",
-            type: {
-              defined: "Account<'info,Marketplace>",
-            },
-          },
-          {
-            name: "tokenManager",
-            type: {
-              defined: "Account<'info,TokenManager>",
-            },
-          },
-          {
-            name: "mint",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "mintMetadataInfo",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "paymentManager",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "paymentMint",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "feeCollectorTokenAccount",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
-          },
-          {
-            name: "payer",
-            type: {
-              defined: "Signer<'info>",
-            },
-          },
-          {
-            name: "cardinalPaymentManager",
-            type: {
-              defined: "Program<'info,CardinalPaymentManager>",
-            },
-          },
-          {
-            name: "cardinalTokenManager",
-            type: {
-              defined: "Program<'info,CardinalTokenManager>",
-            },
-          },
-          {
-            name: "associatedTokenProgram",
-            type: {
-              defined: "Program<'info,AssociatedToken>",
-            },
-          },
-          {
-            name: "tokenProgram",
-            type: {
-              defined: "Program<'info,Token>",
-            },
-          },
-          {
-            name: "systemProgram",
-            type: {
-              defined: "Program<'info,System>",
-            },
-          },
-          {
-            name: "rent",
-            type: {
-              defined: "Sysvar<'info,Rent>",
-            },
-          },
-          {
-            name: "instructions",
-            type: {
-              defined: "UncheckedAccount<'info>",
-            },
+            name: "paymentAmount",
+            type: "u64",
           },
         ],
       },
@@ -2145,10 +1882,6 @@ export const IDL: CardinalTransferAuthority = {
             type: "string",
           },
           {
-            name: "paymentManager",
-            type: "publicKey",
-          },
-          {
             name: "authority",
             type: "publicKey",
           },
@@ -2160,10 +1893,6 @@ export const IDL: CardinalTransferAuthority = {
               },
             },
           },
-          {
-            name: "transferAuthority",
-            type: "publicKey",
-          },
         ],
       },
     },
@@ -2172,10 +1901,6 @@ export const IDL: CardinalTransferAuthority = {
       type: {
         kind: "struct",
         fields: [
-          {
-            name: "transferAuthority",
-            type: "publicKey",
-          },
           {
             name: "paymentManager",
             type: "publicKey",
@@ -2386,6 +2111,21 @@ export const IDL: CardinalTransferAuthority = {
       code: 6023,
       name: "TokenNotDelegated",
       msg: "Token must be delegated",
+    },
+    {
+      code: 6024,
+      name: "ListingChanged",
+      msg: "Listing payment amount or mint has changed",
+    },
+    {
+      code: 6025,
+      name: "InvalidRemainingAccountsSize",
+      msg: "Invalid remaining accounts size",
+    },
+    {
+      code: 6026,
+      name: "InvalidPayerPaymentTokenAccount",
+      msg: "Invalid payer payment token account",
     },
   ],
 };

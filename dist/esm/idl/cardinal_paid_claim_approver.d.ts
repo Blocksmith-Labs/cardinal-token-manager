@@ -1,5 +1,5 @@
-export declare type CardinalPaidClaimApprover = {
-    version: "1.7.4";
+export type CardinalPaidClaimApprover = {
+    version: "4.4.0";
     name: "cardinal_paid_claim_approver";
     instructions: [
         {

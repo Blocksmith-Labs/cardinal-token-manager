@@ -1,23 +1,19 @@
-import { AnchorProvider, BorshAccountsCoder, Program, utils, } from "@project-serum/anchor";
-import { SignerWallet } from "@saberhq/solana-contrib";
-import { Keypair } from "@solana/web3.js";
-import { TRANSFER_AUTHORITY_ADDRESS, TRANSFER_AUTHORITY_IDL, } from "./constants";
+import { BorshAccountsCoder, utils } from "@project-serum/anchor";
+import { TRANSFER_AUTHORITY_ADDRESS, TRANSFER_AUTHORITY_IDL, transferAuthorityProgram, } from "./constants";
 import { findListingAddress, findMarketplaceAddress, findTransferAddress, findTransferAuthorityAddress, } from "./pda";
 //////// TRANSFER AUTHORITY ////////
 export const getTransferAuthority = async (connection, transferAuthorityId) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const transferAuthorityProgram = new Program(TRANSFER_AUTHORITY_IDL, TRANSFER_AUTHORITY_ADDRESS, provider);
-    const parsed = await transferAuthorityProgram.account.transferAuthority.fetch(transferAuthorityId);
+    const program = transferAuthorityProgram(connection);
+    const parsed = await program.account.transferAuthority.fetch(transferAuthorityId);
     return {
         parsed,
         pubkey: transferAuthorityId,
     };
 };
 export const getTransferAuthorityByName = async (connection, name) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const transferAuthorityProgram = new Program(TRANSFER_AUTHORITY_IDL, TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [transferAuthorityId] = await findTransferAuthorityAddress(name);
-    const parsed = await transferAuthorityProgram.account.transferAuthority.fetch(transferAuthorityId);
+    const program = transferAuthorityProgram(connection);
+    const transferAuthorityId = findTransferAuthorityAddress(name);
+    const parsed = await program.account.transferAuthority.fetch(transferAuthorityId);
     return {
         parsed,
         pubkey: transferAuthorityId,
@@ -26,19 +22,17 @@ export const getTransferAuthorityByName = async (connection, name) => {
 export const getAllTransferAuthorities = async (connection) => getAllOfType(connection, "transferAuthority");
 //////// MARKETPLACE ////////
 export const getMarketplace = async (connection, marketplaceId) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const transferAuthorityProgram = new Program(TRANSFER_AUTHORITY_IDL, TRANSFER_AUTHORITY_ADDRESS, provider);
-    const parsed = await transferAuthorityProgram.account.marketplace.fetch(marketplaceId);
+    const program = transferAuthorityProgram(connection);
+    const parsed = await program.account.marketplace.fetch(marketplaceId);
     return {
         parsed,
         pubkey: marketplaceId,
     };
 };
 export const getMarketplaceByName = async (connection, name) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const transferAuthorityProgram = new Program(TRANSFER_AUTHORITY_IDL, TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [marketplaceId] = await findMarketplaceAddress(name);
-    const parsed = await transferAuthorityProgram.account.marketplace.fetch(marketplaceId);
+    const program = transferAuthorityProgram(connection);
+    const marketplaceId = findMarketplaceAddress(name);
+    const parsed = await program.account.marketplace.fetch(marketplaceId);
     return {
         parsed,
         pubkey: marketplaceId,
@@ -47,10 +41,9 @@ export const getMarketplaceByName = async (connection, name) => {
 export const getAllMarketplaces = async (connection) => getAllOfType(connection, "marketplace");
 //////// LISTING ////////
 export const getListing = async (connection, mintId) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const transferAuthorityProgram = new Program(TRANSFER_AUTHORITY_IDL, TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [listingId] = await findListingAddress(mintId);
-    const parsed = await transferAuthorityProgram.account.listing.fetch(listingId);
+    const program = transferAuthorityProgram(connection);
+    const listingId = findListingAddress(mintId);
+    const parsed = await program.account.listing.fetch(listingId);
     return {
         parsed,
         pubkey: listingId,
@@ -117,10 +110,9 @@ export const getListingsForIssuer = async (connection, issuerId) => {
 export const getAllListings = async (connection) => getAllOfType(connection, "listing");
 //////// Transfer ////////
 export const getTransfer = async (connection, mintId) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const transferAuthorityProgram = new Program(TRANSFER_AUTHORITY_IDL, TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [transferId] = await findTransferAddress(mintId);
-    const parsed = await transferAuthorityProgram.account.transfer.fetch(transferId);
+    const program = transferAuthorityProgram(connection);
+    const transferId = findTransferAddress(mintId);
+    const parsed = await program.account.transfer.fetch(transferId);
     return {
         parsed,
         pubkey: transferId,

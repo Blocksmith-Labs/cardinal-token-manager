@@ -1,5 +1,5 @@
 export type CardinalTokenManager = {
-  version: "1.7.4";
+  version: "4.4.0";
   name: "cardinal_token_manager";
   instructions: [
     {
@@ -161,6 +161,27 @@ export type CardinalTokenManager = {
       args: [
         {
           name: "invalidator";
+          type: "publicKey";
+        }
+      ];
+    },
+    {
+      name: "replaceInvalidator";
+      accounts: [
+        {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "invalidator";
+          isMut: false;
+          isSigner: true;
+        }
+      ];
+      args: [
+        {
+          name: "newInvalidator";
           type: "publicKey";
         }
       ];
@@ -785,6 +806,82 @@ export type CardinalTokenManager = {
         }
       ];
       args: [];
+    },
+    {
+      name: "migrate";
+      accounts: [
+        {
+          name: "currentMintManager";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "mintManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "mintMetadata";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ruleset";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenManager";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "holderTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "cardinalCreatorStandard";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
     }
   ];
   accounts: [
@@ -1022,6 +1119,9 @@ export type CardinalTokenManager = {
           },
           {
             name: "Permissioned";
+          },
+          {
+            name: "Programmable";
           }
         ];
       };
@@ -1230,12 +1330,32 @@ export type CardinalTokenManager = {
       code: 6035;
       name: "InvalidPermissionedRewardAddress";
       msg: "Invalid Permissioned Reward Address";
+    },
+    {
+      code: 6036;
+      name: "NoCPIAllowed";
+      msg: "No CPI allowed for the instruction";
+    },
+    {
+      code: 6037;
+      name: "InvalidMigrateAuthority";
+      msg: "Invalid migrate authority";
+    },
+    {
+      code: 6038;
+      name: "CannotMigrateDelegatedToken";
+      msg: "Cannot migrate delegated token";
+    },
+    {
+      code: 6039;
+      name: "InvalidReturnTarget";
+      msg: "Invalid return target";
     }
   ];
 };
 
 export const IDL: CardinalTokenManager = {
-  version: "1.7.4",
+  version: "4.4.0",
   name: "cardinal_token_manager",
   instructions: [
     {
@@ -1397,6 +1517,27 @@ export const IDL: CardinalTokenManager = {
       args: [
         {
           name: "invalidator",
+          type: "publicKey",
+        },
+      ],
+    },
+    {
+      name: "replaceInvalidator",
+      accounts: [
+        {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "invalidator",
+          isMut: false,
+          isSigner: true,
+        },
+      ],
+      args: [
+        {
+          name: "newInvalidator",
           type: "publicKey",
         },
       ],
@@ -2022,6 +2163,82 @@ export const IDL: CardinalTokenManager = {
       ],
       args: [],
     },
+    {
+      name: "migrate",
+      accounts: [
+        {
+          name: "currentMintManager",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "mintManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "mintMetadata",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ruleset",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenManager",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "holderTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "cardinalCreatorStandard",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -2259,6 +2476,9 @@ export const IDL: CardinalTokenManager = {
           {
             name: "Permissioned",
           },
+          {
+            name: "Programmable",
+          },
         ],
       },
     },
@@ -2466,6 +2686,26 @@ export const IDL: CardinalTokenManager = {
       code: 6035,
       name: "InvalidPermissionedRewardAddress",
       msg: "Invalid Permissioned Reward Address",
+    },
+    {
+      code: 6036,
+      name: "NoCPIAllowed",
+      msg: "No CPI allowed for the instruction",
+    },
+    {
+      code: 6037,
+      name: "InvalidMigrateAuthority",
+      msg: "Invalid migrate authority",
+    },
+    {
+      code: 6038,
+      name: "CannotMigrateDelegatedToken",
+      msg: "Cannot migrate delegated token",
+    },
+    {
+      code: 6039,
+      name: "InvalidReturnTarget",
+      msg: "Invalid return target",
     },
   ],
 };

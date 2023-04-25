@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IDL = void 0;
 exports.IDL = {
-    version: "1.7.4",
+    version: "4.4.0",
     name: "cardinal_transfer_authority",
     instructions: [
         {
@@ -217,7 +217,17 @@ exports.IDL = {
             name: "updateListing",
             accounts: [
                 {
+                    name: "tokenManager",
+                    isMut: true,
+                    isSigner: false,
+                },
+                {
                     name: "listing",
+                    isMut: true,
+                    isSigner: false,
+                },
+                {
+                    name: "listerMintTokenAccount",
                     isMut: true,
                     isSigner: false,
                 },
@@ -250,11 +260,6 @@ exports.IDL = {
                     isSigner: false,
                 },
                 {
-                    name: "transfer",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
                     name: "listing",
                     isMut: true,
                     isSigner: false,
@@ -275,11 +280,6 @@ exports.IDL = {
                     isSigner: false,
                 },
                 {
-                    name: "buyerPaymentTokenAccount",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
                     name: "buyerMintTokenAccount",
                     isMut: true,
                     isSigner: false,
@@ -288,6 +288,16 @@ exports.IDL = {
                     name: "buyer",
                     isMut: true,
                     isSigner: true,
+                },
+                {
+                    name: "payer",
+                    isMut: true,
+                    isSigner: true,
+                },
+                {
+                    name: "payerPaymentTokenAccount",
+                    isMut: true,
+                    isSigner: false,
                 },
                 {
                     name: "marketplace",
@@ -316,7 +326,7 @@ exports.IDL = {
                 },
                 {
                     name: "paymentMint",
-                    isMut: true,
+                    isMut: false,
                     isSigner: false,
                 },
                 {
@@ -325,9 +335,9 @@ exports.IDL = {
                     isSigner: false,
                 },
                 {
-                    name: "payer",
+                    name: "feeCollector",
                     isMut: true,
-                    isSigner: true,
+                    isSigner: false,
                 },
                 {
                     name: "cardinalPaymentManager",
@@ -355,23 +365,35 @@ exports.IDL = {
                     isSigner: false,
                 },
                 {
-                    name: "rent",
-                    isMut: false,
-                    isSigner: false,
-                },
-                {
                     name: "instructions",
                     isMut: false,
                     isSigner: false,
                 },
             ],
-            args: [],
+            args: [
+                {
+                    name: "ix",
+                    type: {
+                        defined: "AcceptListingIx",
+                    },
+                },
+            ],
         },
         {
             name: "removeListing",
             accounts: [
                 {
+                    name: "tokenManager",
+                    isMut: true,
+                    isSigner: false,
+                },
+                {
                     name: "listing",
+                    isMut: true,
+                    isSigner: false,
+                },
+                {
+                    name: "listerMintTokenAccount",
                     isMut: true,
                     isSigner: false,
                 },
@@ -387,16 +409,6 @@ exports.IDL = {
                 },
                 {
                     name: "mintManager",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "tokenManager",
-                    isMut: true,
-                    isSigner: false,
-                },
-                {
-                    name: "listerTokenAccount",
                     isMut: true,
                     isSigner: false,
                 },
@@ -419,6 +431,11 @@ exports.IDL = {
                 {
                     name: "marketplace",
                     isMut: true,
+                    isSigner: false,
+                },
+                {
+                    name: "paymentManager",
+                    isMut: false,
                     isSigner: false,
                 },
                 {
@@ -668,10 +685,6 @@ exports.IDL = {
                         type: "string",
                     },
                     {
-                        name: "transferAuthority",
-                        type: "publicKey",
-                    },
-                    {
                         name: "paymentManager",
                         type: "publicKey",
                     },
@@ -749,159 +762,13 @@ exports.IDL = {
     ],
     types: [
         {
-            name: "AcceptListingCtx",
+            name: "AcceptListingIx",
             type: {
                 kind: "struct",
                 fields: [
                     {
-                        name: "transferAuthority",
-                        type: {
-                            defined: "Account<'info,TransferAuthority>",
-                        },
-                    },
-                    {
-                        name: "transferReceipt",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "transfer",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "listing",
-                        type: {
-                            defined: "Account<'info,Listing>",
-                        },
-                    },
-                    {
-                        name: "listerPaymentTokenAccount",
-                        type: {
-                            defined: "Account<'info,TokenAccount>",
-                        },
-                    },
-                    {
-                        name: "listerMintTokenAccount",
-                        type: {
-                            defined: "Account<'info,TokenAccount>",
-                        },
-                    },
-                    {
-                        name: "lister",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "buyerPaymentTokenAccount",
-                        type: {
-                            defined: "Account<'info,TokenAccount>",
-                        },
-                    },
-                    {
-                        name: "buyerMintTokenAccount",
-                        type: {
-                            defined: "Account<'info,TokenAccount>",
-                        },
-                    },
-                    {
-                        name: "buyer",
-                        type: {
-                            defined: "Signer<'info>",
-                        },
-                    },
-                    {
-                        name: "marketplace",
-                        type: {
-                            defined: "Account<'info,Marketplace>",
-                        },
-                    },
-                    {
-                        name: "tokenManager",
-                        type: {
-                            defined: "Account<'info,TokenManager>",
-                        },
-                    },
-                    {
-                        name: "mint",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "mintMetadataInfo",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "paymentManager",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "paymentMint",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "feeCollectorTokenAccount",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
-                    },
-                    {
-                        name: "payer",
-                        type: {
-                            defined: "Signer<'info>",
-                        },
-                    },
-                    {
-                        name: "cardinalPaymentManager",
-                        type: {
-                            defined: "Program<'info,CardinalPaymentManager>",
-                        },
-                    },
-                    {
-                        name: "cardinalTokenManager",
-                        type: {
-                            defined: "Program<'info,CardinalTokenManager>",
-                        },
-                    },
-                    {
-                        name: "associatedTokenProgram",
-                        type: {
-                            defined: "Program<'info,AssociatedToken>",
-                        },
-                    },
-                    {
-                        name: "tokenProgram",
-                        type: {
-                            defined: "Program<'info,Token>",
-                        },
-                    },
-                    {
-                        name: "systemProgram",
-                        type: {
-                            defined: "Program<'info,System>",
-                        },
-                    },
-                    {
-                        name: "rent",
-                        type: {
-                            defined: "Sysvar<'info,Rent>",
-                        },
-                    },
-                    {
-                        name: "instructions",
-                        type: {
-                            defined: "UncheckedAccount<'info>",
-                        },
+                        name: "paymentAmount",
+                        type: "u64",
                     },
                 ],
             },
@@ -952,10 +819,6 @@ exports.IDL = {
                         type: "string",
                     },
                     {
-                        name: "paymentManager",
-                        type: "publicKey",
-                    },
-                    {
                         name: "authority",
                         type: "publicKey",
                     },
@@ -967,10 +830,6 @@ exports.IDL = {
                             },
                         },
                     },
-                    {
-                        name: "transferAuthority",
-                        type: "publicKey",
-                    },
                 ],
             },
         },
@@ -979,10 +838,6 @@ exports.IDL = {
             type: {
                 kind: "struct",
                 fields: [
-                    {
-                        name: "transferAuthority",
-                        type: "publicKey",
-                    },
                     {
                         name: "paymentManager",
                         type: "publicKey",
@@ -1193,6 +1048,21 @@ exports.IDL = {
             code: 6023,
             name: "TokenNotDelegated",
             msg: "Token must be delegated",
+        },
+        {
+            code: 6024,
+            name: "ListingChanged",
+            msg: "Listing payment amount or mint has changed",
+        },
+        {
+            code: 6025,
+            name: "InvalidRemainingAccountsSize",
+            msg: "Invalid remaining accounts size",
+        },
+        {
+            code: 6026,
+            name: "InvalidPayerPaymentTokenAccount",
+            msg: "Invalid payer payment token account",
         },
     ],
 };

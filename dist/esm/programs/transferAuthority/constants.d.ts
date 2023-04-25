@@ -1,4 +1,7 @@
-import type { AnchorTypes } from "@saberhq/anchor-contrib";
+import type { ParsedIdlAccountData } from "@cardinal/common";
+import { Program } from "@project-serum/anchor";
+import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import type { ConfirmOptions, Connection } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
 import * as TRANSFER_AUTHORITY_TYPES from "../../idl/cardinal_transfer_authority";
 export declare const TRANSFER_AUTHORITY_ADDRESS: PublicKey;
@@ -7,16 +10,12 @@ export declare const MARKETPLACE_SEED = "marketplace";
 export declare const LISTING_SEED = "listing";
 export declare const TRANSFER_SEED = "transfer";
 export declare const TRANSFER_AUTHORITY_IDL: TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority;
-export declare type TRANSFER_AUTHORITY_PROGRAM = TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority;
-export declare type TransferAuthorityTypes = AnchorTypes<TRANSFER_AUTHORITY_PROGRAM, {
-    tokenManager: TransferAuthorityData;
-}>;
+export type TRANSFER_AUTHORITY_PROGRAM = TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority;
 export declare const WSOL_MINT: PublicKey;
 export declare const DEFAULT_TRANSFER_AUTHORITY_NAME = "global";
-declare type Accounts = TransferAuthorityTypes["Accounts"];
-export declare type TransferAuthorityData = Accounts["transferAuthority"];
-export declare type MarketplaceData = Accounts["marketplace"];
-export declare type ListingData = Accounts["listing"];
-export declare type TransferData = Accounts["transfer"];
-export {};
+export type TransferAuthorityData = ParsedIdlAccountData<"transferAuthority", TRANSFER_AUTHORITY_PROGRAM>;
+export type MarketplaceData = ParsedIdlAccountData<"marketplace", TRANSFER_AUTHORITY_PROGRAM>;
+export type ListingData = ParsedIdlAccountData<"listing", TRANSFER_AUTHORITY_PROGRAM>;
+export type TransferData = ParsedIdlAccountData<"transfer", TRANSFER_AUTHORITY_PROGRAM>;
+export declare const transferAuthorityProgram: (connection: Connection, wallet?: Wallet, confirmOptions?: ConfirmOptions) => Program<TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority>;
 //# sourceMappingURL=constants.d.ts.map

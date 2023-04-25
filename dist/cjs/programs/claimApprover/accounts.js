@@ -2,15 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllClaimApprovers = exports.getClaimApprovers = exports.getClaimApprover = void 0;
 const anchor_1 = require("@project-serum/anchor");
-const solana_contrib_1 = require("@saberhq/solana-contrib");
-const web3_js_1 = require("@solana/web3.js");
 const constants_1 = require("./constants");
 const pda_1 = require("./pda");
 const getClaimApprover = async (connection, tokenManagerId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const claimApproverProgram = new anchor_1.Program(constants_1.CLAIM_APPROVER_IDL, constants_1.CLAIM_APPROVER_ADDRESS, provider);
-    const [claimApproverId] = await (0, pda_1.findClaimApproverAddress)(tokenManagerId);
-    const parsed = await claimApproverProgram.account.paidClaimApprover.fetch(claimApproverId);
+    const program = (0, constants_1.claimApproverProgram)(connection);
+    const claimApproverId = (0, pda_1.findClaimApproverAddress)(tokenManagerId);
+    const parsed = await program.account.paidClaimApprover.fetch(claimApproverId);
     return {
         parsed,
         pubkey: claimApproverId,
@@ -18,12 +15,10 @@ const getClaimApprover = async (connection, tokenManagerId) => {
 };
 exports.getClaimApprover = getClaimApprover;
 const getClaimApprovers = async (connection, claimApproverIds) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const claimApproverProgram = new anchor_1.Program(constants_1.CLAIM_APPROVER_IDL, constants_1.CLAIM_APPROVER_ADDRESS, provider);
+    const program = (0, constants_1.claimApproverProgram)(connection);
     let claimApprovers = [];
     try {
-        claimApprovers =
-            (await claimApproverProgram.account.paidClaimApprover.fetchMultiple(claimApproverIds));
+        claimApprovers = (await program.account.paidClaimApprover.fetchMultiple(claimApproverIds));
     }
     catch (e) {
         console.log(e);

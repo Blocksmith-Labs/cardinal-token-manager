@@ -1,5 +1,5 @@
 export const IDL = {
-    version: "1.7.4",
+    version: "4.4.0",
     name: "cardinal_time_invalidator",
     instructions: [
         {

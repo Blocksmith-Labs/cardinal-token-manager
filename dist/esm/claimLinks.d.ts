@@ -1,9 +1,9 @@
 import { BN } from "@project-serum/anchor";
-import type { Wallet } from "@saberhq/solana-contrib";
+import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import type { Connection, PublicKey } from "@solana/web3.js";
 import { Keypair, Transaction } from "@solana/web3.js";
 import { InvalidationType, TokenManagerKind } from "./programs/tokenManager";
-import type { UseInvalidationParams } from "./programs/useInvalidator/instruction";
+import type { UseInvalidationParams } from "./programs/useInvalidator";
 export declare const getLink: (tokenManagerId: PublicKey, otp: Keypair | undefined, cluster?: string, baseUrl?: string, collection?: string) => string;
 export declare const fromLink: (link: string) => [PublicKey, Keypair];
 export declare const issueToken: (connection: Connection, wallet: Wallet, { mint, issuerTokenAccountId, useInvalidation, amount, kind, invalidationType, }: {

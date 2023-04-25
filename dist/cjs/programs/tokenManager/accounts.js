@@ -2,13 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTransferReceipt = exports.getTokenManagersForIssuer = exports.getMintCounter = exports.getMintManager = exports.getTokenManagersByState = exports.getTokenManagers = exports.getTokenManager = void 0;
 const anchor_1 = require("@project-serum/anchor");
-const solana_contrib_1 = require("@saberhq/solana-contrib");
-const web3_js_1 = require("@solana/web3.js");
 const constants_1 = require("./constants");
 const getTokenManager = async (connection, tokenManagerId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const tokenManagerProgram = new anchor_1.Program(constants_1.TOKEN_MANAGER_IDL, constants_1.TOKEN_MANAGER_ADDRESS, provider);
-    const parsed = await tokenManagerProgram.account.tokenManager.fetch(tokenManagerId);
+    const program = (0, constants_1.tokenManagerProgram)(connection);
+    const parsed = await program.account.tokenManager.fetch(tokenManagerId);
     return {
         parsed,
         pubkey: tokenManagerId,
@@ -16,22 +13,15 @@ const getTokenManager = async (connection, tokenManagerId) => {
 };
 exports.getTokenManager = getTokenManager;
 const getTokenManagers = async (connection, tokenManagerIds) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const tokenManagerProgram = new anchor_1.Program(constants_1.TOKEN_MANAGER_IDL, constants_1.TOKEN_MANAGER_ADDRESS, provider);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    const program = (0, constants_1.tokenManagerProgram)(connection);
     let tokenManagers = [];
     try {
-        tokenManagers =
-            await tokenManagerProgram.account.tokenManager.fetchMultiple(tokenManagerIds);
+        tokenManagers = (await program.account.tokenManager.fetchMultiple(tokenManagerIds));
     }
     catch (e) {
         console.log(e);
     }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     return tokenManagers.map((tm, i) => ({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         parsed: tm,
         pubkey: tokenManagerIds[i],
     }));
@@ -78,9 +68,8 @@ const getTokenManagersByState = async (connection, state) => {
 };
 exports.getTokenManagersByState = getTokenManagersByState;
 const getMintManager = async (connection, mintManagerId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const tokenManagerProgram = new anchor_1.Program(constants_1.TOKEN_MANAGER_IDL, constants_1.TOKEN_MANAGER_ADDRESS, provider);
-    const parsed = await tokenManagerProgram.account.mintManager.fetch(mintManagerId);
+    const program = (0, constants_1.tokenManagerProgram)(connection);
+    const parsed = await program.account.mintManager.fetch(mintManagerId);
     return {
         parsed,
         pubkey: mintManagerId,
@@ -88,9 +77,8 @@ const getMintManager = async (connection, mintManagerId) => {
 };
 exports.getMintManager = getMintManager;
 const getMintCounter = async (connection, mintCounterId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const tokenManagerProgram = new anchor_1.Program(constants_1.TOKEN_MANAGER_IDL, constants_1.TOKEN_MANAGER_ADDRESS, provider);
-    const parsed = await tokenManagerProgram.account.mintCounter.fetch(mintCounterId);
+    const program = (0, constants_1.tokenManagerProgram)(connection);
+    const parsed = await program.account.mintCounter.fetch(mintCounterId);
     return {
         parsed,
         pubkey: mintCounterId,
@@ -129,9 +117,8 @@ const getTokenManagersForIssuer = async (connection, issuerId) => {
 };
 exports.getTokenManagersForIssuer = getTokenManagersForIssuer;
 const getTransferReceipt = async (connection, transferReceiptId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const tokenManagerProgram = new anchor_1.Program(constants_1.TOKEN_MANAGER_IDL, constants_1.TOKEN_MANAGER_ADDRESS, provider);
-    const parsed = await tokenManagerProgram.account.transferReceipt.fetch(transferReceiptId);
+    const program = (0, constants_1.tokenManagerProgram)(connection);
+    const parsed = await program.account.transferReceipt.fetch(transferReceiptId);
     return {
         parsed,
         pubkey: transferReceiptId,

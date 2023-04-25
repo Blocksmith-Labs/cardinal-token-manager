@@ -2,15 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllOfType = exports.getTransfersToUser = exports.getTransfersFromUser = exports.getTransfer = exports.getAllListings = exports.getListingsForIssuer = exports.getListingsForMarketplace = exports.getListing = exports.getAllMarketplaces = exports.getMarketplaceByName = exports.getMarketplace = exports.getAllTransferAuthorities = exports.getTransferAuthorityByName = exports.getTransferAuthority = void 0;
 const anchor_1 = require("@project-serum/anchor");
-const solana_contrib_1 = require("@saberhq/solana-contrib");
-const web3_js_1 = require("@solana/web3.js");
 const constants_1 = require("./constants");
 const pda_1 = require("./pda");
 //////// TRANSFER AUTHORITY ////////
 const getTransferAuthority = async (connection, transferAuthorityId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const transferAuthorityProgram = new anchor_1.Program(constants_1.TRANSFER_AUTHORITY_IDL, constants_1.TRANSFER_AUTHORITY_ADDRESS, provider);
-    const parsed = await transferAuthorityProgram.account.transferAuthority.fetch(transferAuthorityId);
+    const program = (0, constants_1.transferAuthorityProgram)(connection);
+    const parsed = await program.account.transferAuthority.fetch(transferAuthorityId);
     return {
         parsed,
         pubkey: transferAuthorityId,
@@ -18,10 +15,9 @@ const getTransferAuthority = async (connection, transferAuthorityId) => {
 };
 exports.getTransferAuthority = getTransferAuthority;
 const getTransferAuthorityByName = async (connection, name) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const transferAuthorityProgram = new anchor_1.Program(constants_1.TRANSFER_AUTHORITY_IDL, constants_1.TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [transferAuthorityId] = await (0, pda_1.findTransferAuthorityAddress)(name);
-    const parsed = await transferAuthorityProgram.account.transferAuthority.fetch(transferAuthorityId);
+    const program = (0, constants_1.transferAuthorityProgram)(connection);
+    const transferAuthorityId = (0, pda_1.findTransferAuthorityAddress)(name);
+    const parsed = await program.account.transferAuthority.fetch(transferAuthorityId);
     return {
         parsed,
         pubkey: transferAuthorityId,
@@ -32,9 +28,8 @@ const getAllTransferAuthorities = async (connection) => (0, exports.getAllOfType
 exports.getAllTransferAuthorities = getAllTransferAuthorities;
 //////// MARKETPLACE ////////
 const getMarketplace = async (connection, marketplaceId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const transferAuthorityProgram = new anchor_1.Program(constants_1.TRANSFER_AUTHORITY_IDL, constants_1.TRANSFER_AUTHORITY_ADDRESS, provider);
-    const parsed = await transferAuthorityProgram.account.marketplace.fetch(marketplaceId);
+    const program = (0, constants_1.transferAuthorityProgram)(connection);
+    const parsed = await program.account.marketplace.fetch(marketplaceId);
     return {
         parsed,
         pubkey: marketplaceId,
@@ -42,10 +37,9 @@ const getMarketplace = async (connection, marketplaceId) => {
 };
 exports.getMarketplace = getMarketplace;
 const getMarketplaceByName = async (connection, name) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const transferAuthorityProgram = new anchor_1.Program(constants_1.TRANSFER_AUTHORITY_IDL, constants_1.TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [marketplaceId] = await (0, pda_1.findMarketplaceAddress)(name);
-    const parsed = await transferAuthorityProgram.account.marketplace.fetch(marketplaceId);
+    const program = (0, constants_1.transferAuthorityProgram)(connection);
+    const marketplaceId = (0, pda_1.findMarketplaceAddress)(name);
+    const parsed = await program.account.marketplace.fetch(marketplaceId);
     return {
         parsed,
         pubkey: marketplaceId,
@@ -56,10 +50,9 @@ const getAllMarketplaces = async (connection) => (0, exports.getAllOfType)(conne
 exports.getAllMarketplaces = getAllMarketplaces;
 //////// LISTING ////////
 const getListing = async (connection, mintId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const transferAuthorityProgram = new anchor_1.Program(constants_1.TRANSFER_AUTHORITY_IDL, constants_1.TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [listingId] = await (0, pda_1.findListingAddress)(mintId);
-    const parsed = await transferAuthorityProgram.account.listing.fetch(listingId);
+    const program = (0, constants_1.transferAuthorityProgram)(connection);
+    const listingId = (0, pda_1.findListingAddress)(mintId);
+    const parsed = await program.account.listing.fetch(listingId);
     return {
         parsed,
         pubkey: listingId,
@@ -130,10 +123,9 @@ const getAllListings = async (connection) => (0, exports.getAllOfType)(connectio
 exports.getAllListings = getAllListings;
 //////// Transfer ////////
 const getTransfer = async (connection, mintId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const transferAuthorityProgram = new anchor_1.Program(constants_1.TRANSFER_AUTHORITY_IDL, constants_1.TRANSFER_AUTHORITY_ADDRESS, provider);
-    const [transferId] = await (0, pda_1.findTransferAddress)(mintId);
-    const parsed = await transferAuthorityProgram.account.transfer.fetch(transferId);
+    const program = (0, constants_1.transferAuthorityProgram)(connection);
+    const transferId = (0, pda_1.findTransferAddress)(mintId);
+    const parsed = await program.account.transfer.fetch(transferId);
     return {
         parsed,
         pubkey: transferId,

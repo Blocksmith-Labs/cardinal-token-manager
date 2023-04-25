@@ -1,4 +1,6 @@
-import { PublicKey } from "@solana/web3.js";
+import { emptyWallet } from "@cardinal/common";
+import { AnchorProvider, Program } from "@project-serum/anchor";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import * as TOKEN_MANAGER_TYPES from "../../idl/cardinal_token_manager";
 export const TOKEN_MANAGER_ADDRESS = new PublicKey("9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh");
 export const MINT_COUNTER_SEED = "mint-counter";
@@ -14,6 +16,7 @@ export var TokenManagerKind;
     TokenManagerKind[TokenManagerKind["Unmanaged"] = 2] = "Unmanaged";
     TokenManagerKind[TokenManagerKind["Edition"] = 3] = "Edition";
     TokenManagerKind[TokenManagerKind["Permissioned"] = 4] = "Permissioned";
+    TokenManagerKind[TokenManagerKind["Programmable"] = 5] = "Programmable";
 })(TokenManagerKind || (TokenManagerKind = {}));
 export var InvalidationType;
 (function (InvalidationType) {
@@ -31,4 +34,7 @@ export var TokenManagerState;
     TokenManagerState[TokenManagerState["Invalidated"] = 3] = "Invalidated";
 })(TokenManagerState || (TokenManagerState = {}));
 export const CRANK_KEY = new PublicKey("crkdpVWjHWdggGgBuSyAqSmZUmAjYLzD435tcLDRLXr");
+export const tokenManagerProgram = (connection, wallet, confirmOptions) => {
+    return new Program(TOKEN_MANAGER_IDL, TOKEN_MANAGER_ADDRESS, new AnchorProvider(connection, wallet !== null && wallet !== void 0 ? wallet : emptyWallet(Keypair.generate().publicKey), confirmOptions !== null && confirmOptions !== void 0 ? confirmOptions : {}));
+};
 //# sourceMappingURL=constants.js.map

@@ -16,4 +16,6 @@ pub enum ErrorCode {
     InvalidPaymentManager,
     #[msg("Mint metadata is owned by the incorrect program")]
     InvalidMintMetadataOwner,
+    #[msg("Invalid fee collector")]
+    InvalidFeeCollector,
 }

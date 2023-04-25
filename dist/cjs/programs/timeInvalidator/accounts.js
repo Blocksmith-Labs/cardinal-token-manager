@@ -2,13 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllTimeInvalidators = exports.getExpiredTimeInvalidators = exports.getTimeInvalidators = exports.getTimeInvalidator = void 0;
 const anchor_1 = require("@project-serum/anchor");
-const solana_contrib_1 = require("@saberhq/solana-contrib");
-const web3_js_1 = require("@solana/web3.js");
 const constants_1 = require("./constants");
 const getTimeInvalidator = async (connection, timeInvalidatorId) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const timeInvalidatorProgram = new anchor_1.Program(constants_1.TIME_INVALIDATOR_IDL, constants_1.TIME_INVALIDATOR_ADDRESS, provider);
-    const parsed = await timeInvalidatorProgram.account.timeInvalidator.fetch(timeInvalidatorId);
+    const program = (0, constants_1.timeInvalidatorProgram)(connection);
+    const parsed = await program.account.timeInvalidator.fetch(timeInvalidatorId);
     return {
         parsed,
         pubkey: timeInvalidatorId,
@@ -16,12 +13,10 @@ const getTimeInvalidator = async (connection, timeInvalidatorId) => {
 };
 exports.getTimeInvalidator = getTimeInvalidator;
 const getTimeInvalidators = async (connection, timeInvalidatorIds) => {
-    const provider = new anchor_1.AnchorProvider(connection, new solana_contrib_1.SignerWallet(web3_js_1.Keypair.generate()), {});
-    const timeInvalidatorProgram = new anchor_1.Program(constants_1.TIME_INVALIDATOR_IDL, constants_1.TIME_INVALIDATOR_ADDRESS, provider);
+    const program = (0, constants_1.timeInvalidatorProgram)(connection);
     let timeInvalidators = [];
     try {
-        timeInvalidators =
-            (await timeInvalidatorProgram.account.timeInvalidator.fetchMultiple(timeInvalidatorIds));
+        timeInvalidators = (await program.account.timeInvalidator.fetchMultiple(timeInvalidatorIds));
     }
     catch (e) {
         console.log(e);

@@ -24,6 +24,8 @@ pub enum TokenManagerKind {
     Edition = 3,
     /// Token is owned by the user but permissioned and they can choose to delegate or not allowing transfers
     Permissioned = 4,
+    /// Token is a metaplex programmable nft
+    Programmable = 5,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
@@ -42,7 +44,7 @@ pub enum InvalidationType {
 }
 
 pub const INVALIDATION_REWARD_LAMPORTS: u64 = 5_000_000;
-pub const PERMISSIONED_REWARD_LAMPORTS: u64 = 100_000_000;
+pub const PERMISSIONED_REWARD_LAMPORTS: u64 = 10_000_000; // 0.01 SOL issue fee
 pub const PERMISSIONED_REWARD_ADDRESS: &str = "crkdpVWjHWdggGgBuSyAqSmZUmAjYLzD435tcLDRLXr";
 
 pub fn token_manager_size(num_invalidators: usize) -> usize {

@@ -3,7 +3,8 @@ pub mod instructions;
 pub mod state;
 pub mod utils;
 
-use {anchor_lang::prelude::*, instructions::*};
+use anchor_lang::prelude::*;
+use instructions::*;
 
 declare_id!("9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh");
 
@@ -35,6 +36,10 @@ pub mod cardinal_token_manager {
         add_invalidator::handler(ctx, invalidator)
     }
 
+    pub fn replace_invalidator(ctx: Context<ReplaceInvalidatorCtx>, new_invalidator: Pubkey) -> Result<()> {
+        replace_invalidator::handler(ctx, new_invalidator)
+    }
+
     pub fn create_claim_receipt(ctx: Context<CreateClaimReceiptCtx>, target: Pubkey) -> Result<()> {
         create_claim_receipt::handler(ctx, target)
     }
@@ -47,7 +52,7 @@ pub mod cardinal_token_manager {
         issue::handler(ctx)
     }
 
-    pub fn unissue(ctx: Context<UnissueCtx>) -> Result<()> {
+    pub fn unissue<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts, 'remaining, 'info, UnissueCtx<'info>>) -> Result<()> {
         unissue::handler(ctx)
     }
 
@@ -99,5 +104,9 @@ pub mod cardinal_token_manager {
 
     pub fn undelegate(ctx: Context<UndelegateCtx>) -> Result<()> {
         permissioned::undelegate::handler(ctx)
+    }
+
+    pub fn migrate(ctx: Context<MigrateCtx>) -> Result<()> {
+        permissioned::migrate::handler(ctx)
     }
 }

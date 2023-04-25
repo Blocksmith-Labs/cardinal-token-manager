@@ -4,7 +4,7 @@
 [![Release](https://github.com/cardinal-labs/cardinal-token-manager/actions/workflows/release.yml/badge.svg?branch=v0.0.27)](https://github.com/cardinal-labs/cardinal-token-manager/actions/workflows/release.yml)
 
 <p align="center">
-    <img src="./images/banner.png" />
+    <img src="./doc-assets/banner.png" />
 </p>
 
 <p align="center">
@@ -30,11 +30,10 @@ The Token Manager program is a wrapper protocol that achieves conditional owners
 
 Program addresses are the same on devnet, testnet, and mainnet-beta.
 
-- TokenManager: [`9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh`](https://explorer.solana.com/address/9KU8ogB4tKAgfxxz94dWq7V5UDB41kMyDeAtq3xMwnjh)
-- PaidClaimApprover: [`ASARc3C85tapTVLHLfDMdzxiNCjJDM4C7ZmEZNJ5g9FV`](https://explorer.solana.com/address/ASARc3C85tapTVLHLfDMdzxiNCjJDM4C7ZmEZNJ5g9FV)
-- TimeInvalidator: [`5Jd9DPJ7Q99dNBRso8Xm1ZE215GRjbtkdPEz8U5QWZfU`](https://explorer.solana.com/address/5Jd9DPJ7Q99dNBRso8Xm1ZE215GRjbtkdPEz8U5QWZfU)
-- UseInvalidator: [`7Qt3zVnqXuxqtzZy8iMyhnFfHdcv2UdqweoHvHKtiah1`](https://explorer.solana.com/address/7Qt3zVnqXuxqtzZy8iMyhnFfHdcv2UdqweoHvHKtiah1)
-- PaymentManager: [`tzVYw3v7AHVXWdVTEQS4uwM5woPK3NJwBELAE9Mv4tW`](https://explorer.solana.com/address/tzVYw3v7AHVXWdVTEQS4uwM5woPK3NJwBELAE9Mv4tW)
+- TokenManager: [`mgr99QFMYByTqGPWmNqunV7vBLmWWXdSrHUfV8Jf3JM`](https://explorer.solana.com/address/mgr99QFMYByTqGPWmNqunV7vBLmWWXdSrHUfV8Jf3JM)
+- PaidClaimApprover: [`pcaBwhJ1YHp7UDA7HASpQsRUmUNwzgYaLQto2kSj1fR`](https://explorer.solana.com/address/pcaBwhJ1YHp7UDA7HASpQsRUmUNwzgYaLQto2kSj1fR)
+- TimeInvalidator: [`tmeEDp1RgoDtZFtx6qod3HkbQmv9LMe36uqKVvsLTDE`](https://explorer.solana.com/address/tmeEDp1RgoDtZFtx6qod3HkbQmv9LMe36uqKVvsLTDE)
+- UseInvalidator: [`useZ65tbyvWpdYCLDJaegGK34Lnsi8S3jZdwx8122qp`](https://explorer.solana.com/address/useZ65tbyvWpdYCLDJaegGK34Lnsi8S3jZdwx8122qp)
 
 ## Plugins
 

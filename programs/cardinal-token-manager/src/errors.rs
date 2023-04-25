@@ -74,4 +74,12 @@ pub enum ErrorCode {
     InvalidMintAuthority,
     #[msg("Invalid Permissioned Reward Address")]
     InvalidPermissionedRewardAddress,
+    #[msg("No CPI allowed for the instruction")]
+    NoCPIAllowed,
+    #[msg("Invalid migrate authority")]
+    InvalidMigrateAuthority,
+    #[msg("Cannot migrate delegated token")]
+    CannotMigrateDelegatedToken,
+    #[msg("Invalid return target")]
+    InvalidReturnTarget,
 }

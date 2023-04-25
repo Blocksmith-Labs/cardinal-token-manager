@@ -1,52 +1,53 @@
 import {
-  MasterEdition,
-  Metadata,
-} from "@metaplex-foundation/mpl-token-metadata";
-import type { Wallet } from "@saberhq/solana-contrib";
-import type {
-  AccountMeta,
-  Connection,
+  emptyWallet,
+  findAta,
+  findMintEditionId,
+  findMintMetadataId,
+  tryGetAccount,
+  withFindOrInitAssociatedTokenAccount,
+  withWrapSol,
+} from "@cardinal/common";
+import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
+import { getPaymentManager } from "@cardinal/payment-manager/dist/cjs/accounts";
+import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
+import { withRemainingAccountsForHandlePaymentWithRoyalties } from "@cardinal/payment-manager/dist/cjs/utils";
+import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import type { AccountMeta, Connection, Transaction } from "@solana/web3.js";
+import {
   PublicKey,
-  Transaction,
+  SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import type BN from "bn.js";
 
-import { getPaymentManager } from "./programs/paymentManager/accounts";
-import { findPaymentManagerAddress } from "./programs/paymentManager/pda";
 import {
   getRemainingAccountsForKind,
   InvalidationType,
+  TOKEN_MANAGER_ADDRESS,
   TokenManagerKind,
-  withRemainingAccountsForHandlePaymentWithRoyalties,
+  tokenManagerProgram,
   withRemainingAccountsForReturn,
 } from "./programs/tokenManager";
 import { getTokenManager } from "./programs/tokenManager/accounts";
-import { claim } from "./programs/tokenManager/instruction";
 import {
+  findMintManagerId,
   findTokenManagerAddress,
   findTransferReceiptId,
 } from "./programs/tokenManager/pda";
-import { WSOL_MINT } from "./programs/transferAuthority";
+import {
+  transferAuthorityProgram,
+  WSOL_MINT,
+} from "./programs/transferAuthority";
 import {
   getListing,
   getMarketplace,
-  getMarketplaceByName,
 } from "./programs/transferAuthority/accounts";
-import {
-  acceptListing,
-  acceptTransfer,
-  cancelTransfer,
-  createListing,
-  initMarketplace,
-  initTransfer,
-  initTransferAuthority,
-  release,
-  removeListing,
-  updateListing,
-  updateMarketplace,
-  updateTransferAuthority,
-  whitelistMarkeplaces,
-} from "./programs/transferAuthority/instruction";
 import {
   findListingAddress,
   findMarketplaceAddress,
@@ -54,13 +55,6 @@ import {
   findTransferAuthorityAddress,
 } from "./programs/transferAuthority/pda";
 import { withIssueToken } from "./transaction";
-import {
-  emptyWallet,
-  findAta,
-  tryGetAccount,
-  withFindOrInitAssociatedTokenAccount,
-} from "./utils";
-import { withWrapSol } from "./wrappedSol";
 
 export const withWrapToken = async (
   transaction: Transaction,
@@ -69,11 +63,12 @@ export const withWrapToken = async (
   mintId: PublicKey,
   transferAuthorityInfo?: {
     transferAuthorityName: string;
-    setInvalidator?: boolean;
+    creator?: PublicKey;
   },
   payer = wallet.publicKey
 ): Promise<[Transaction, PublicKey]> => {
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const tmManagerProgram = tokenManagerProgram(connection, wallet);
+  const tokenManagerId = findTokenManagerAddress(mintId);
   const checkTokenManager = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
@@ -82,7 +77,7 @@ export const withWrapToken = async (
   }
   const issuerTokenAccountId = await findAta(mintId, wallet.publicKey, true);
   let kind = TokenManagerKind.Edition;
-  const masterEditionId = await MasterEdition.getPDA(mintId);
+  const masterEditionId = findMintEditionId(mintId);
   const accountInfo = await connection.getAccountInfo(masterEditionId);
   if (!accountInfo) kind = TokenManagerKind.Permissioned;
 
@@ -98,7 +93,7 @@ export const withWrapToken = async (
       transferAuthorityInfo: transferAuthorityInfo
         ? {
             transferAuthorityName: transferAuthorityInfo.transferAuthorityName,
-            setInvalidator: transferAuthorityInfo.setInvalidator ?? true,
+            creator: transferAuthorityInfo.creator,
           }
         : undefined,
     },
@@ -119,18 +114,21 @@ export const withWrapToken = async (
     true
   );
 
-  transaction.add(
-    await claim(
-      connection,
-      wallet,
-      tokenManagerId,
-      kind,
-      mintId,
-      tokenManagerTokenAccountId,
-      recipientTokenAccountId,
-      undefined
-    )
-  );
+  const remainingAccounts = getRemainingAccountsForKind(mintId, kind);
+  const claimIx = await tmManagerProgram.methods
+    .claim()
+    .accounts({
+      tokenManager: tokenManagerId,
+      tokenManagerTokenAccount: tokenManagerTokenAccountId,
+      mint: mintId,
+      recipient: wallet.publicKey,
+      recipientTokenAccount: recipientTokenAccountId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .remainingAccounts(remainingAccounts)
+    .instruction();
+  transaction.add(claimIx);
 
   return [transaction, tokenManagerId];
 };
@@ -144,19 +142,23 @@ export const withInitTransferAuthority = async (
   payer = wallet.publicKey,
   allowedMarketplaces?: PublicKey[]
 ): Promise<[Transaction, PublicKey]> => {
-  const [transferAuthority] = await findTransferAuthorityAddress(name);
-  transaction.add(
-    initTransferAuthority(
-      connection,
-      wallet,
-      name,
-      transferAuthority,
-      authority,
-      payer,
-      allowedMarketplaces
-    )
-  );
-  return [transaction, transferAuthority];
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const transferAuthorityId = findTransferAuthorityAddress(name);
+
+  const initTransferAuthorityIx = await transferAuthProgram.methods
+    .initTransferAuthority({
+      name: name,
+      authority: authority,
+      allowedMarketplaces: allowedMarketplaces ?? null,
+    })
+    .accounts({
+      transferAuthority: transferAuthorityId,
+      payer: payer ?? wallet.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+  transaction.add(initTransferAuthorityIx);
+  return [transaction, transferAuthorityId];
 };
 
 export const withUpdateTransferAuthority = async (
@@ -165,18 +167,22 @@ export const withUpdateTransferAuthority = async (
   wallet: Wallet,
   name: string,
   authority: PublicKey,
-  allowedMarketplaces?: PublicKey[] | null
+  allowedMarketplaces?: PublicKey[]
 ): Promise<Transaction> => {
-  const [transferAuthorityId] = await findTransferAuthorityAddress(name);
-  transaction.add(
-    updateTransferAuthority(
-      connection,
-      wallet,
-      transferAuthorityId,
-      authority,
-      allowedMarketplaces
-    )
-  );
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const transferAuthorityId = findTransferAuthorityAddress(name);
+
+  const updateTransferAuthorityIx = await transferAuthProgram.methods
+    .updateTransferAuthority({
+      authority: authority,
+      allowedMarketplaces: allowedMarketplaces,
+    })
+    .accounts({
+      transferAuthority: transferAuthorityId,
+      authority: authority,
+    })
+    .instruction();
+  transaction.add(updateTransferAuthorityIx);
   return transaction;
 };
 
@@ -185,30 +191,28 @@ export const withInitMarketplace = async (
   connection: Connection,
   wallet: Wallet,
   name: string,
-  transferAuthorityName: string,
   paymentManagerName: string,
   paymentMints?: PublicKey[],
   payer = wallet.publicKey
 ): Promise<[Transaction, PublicKey]> => {
-  const [transferAuthority] = await findTransferAuthorityAddress(
-    transferAuthorityName
-  );
-  const [marketplaceId] = await findMarketplaceAddress(name);
-  const [paymentManagerId] = await findPaymentManagerAddress(
-    paymentManagerName
-  );
-  transaction.add(
-    initMarketplace(
-      connection,
-      wallet,
-      name,
-      marketplaceId,
-      transferAuthority,
-      paymentManagerId,
-      paymentMints,
-      payer
-    )
-  );
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const marketplaceId = findMarketplaceAddress(name);
+  const paymentManagerId = findPaymentManagerAddress(paymentManagerName);
+
+  const initMarketplaceIx = await transferAuthProgram.methods
+    .initMarketplace({
+      name: name,
+      authority: wallet.publicKey,
+      paymentMints: paymentMints ?? null,
+    })
+    .accounts({
+      marketplace: marketplaceId,
+      paymentManager: paymentManagerId,
+      payer: payer ?? wallet.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+  transaction.add(initMarketplaceIx);
   return [transaction, marketplaceId];
 };
 
@@ -217,29 +221,26 @@ export const withUpdateMarketplace = async (
   connection: Connection,
   wallet: Wallet,
   name: string,
-  transferAuthorityName: string,
   paymentManagerName: string,
   authority: PublicKey,
   paymentMints: PublicKey[]
 ): Promise<Transaction> => {
-  const [transferAuthority] = await findTransferAuthorityAddress(
-    transferAuthorityName
-  );
-  const [marketplaceId] = await findMarketplaceAddress(name);
-  const [paymentManagerId] = await findPaymentManagerAddress(
-    paymentManagerName
-  );
-  transaction.add(
-    updateMarketplace(
-      connection,
-      wallet,
-      marketplaceId,
-      transferAuthority,
-      paymentManagerId,
-      authority,
-      paymentMints.length !== 0 ? paymentMints : undefined
-    )
-  );
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const marketplaceId = findMarketplaceAddress(name);
+  const paymentManagerId = findPaymentManagerAddress(paymentManagerName);
+
+  const updateMarketplaceIx = await transferAuthProgram.methods
+    .updateMarketplace({
+      paymentManager: paymentManagerId,
+      authority: authority,
+      paymentMints: paymentMints,
+    })
+    .accounts({
+      marketplace: marketplaceId,
+      authority: authority,
+    })
+    .instruction();
+  transaction.add(updateMarketplaceIx);
   return transaction;
 };
 
@@ -250,35 +251,64 @@ export const withCreateListing = async (
   mintId: PublicKey,
   markeptlaceName: string,
   paymentAmount: BN,
-  paymentMint = WSOL_MINT,
+  paymentMint = PublicKey.default,
   payer = wallet.publicKey
 ): Promise<[Transaction, PublicKey]> => {
-  const [listingId] = await findListingAddress(mintId);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const listingId = findListingAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
   const listerTokenAccountId = await findAta(mintId, wallet.publicKey, true);
-  const [marketplaceId] = await findMarketplaceAddress(markeptlaceName);
-  const markeptlaceData = await tryGetAccount(() =>
-    getMarketplaceByName(connection, markeptlaceName)
+  const marketplaceId = findMarketplaceAddress(markeptlaceName);
+  const tokenManagerData = await tryGetAccount(() =>
+    getTokenManager(connection, tokenManagerId)
   );
-  if (!markeptlaceData?.parsed) {
-    throw `No marketplace with name ${markeptlaceName} found`;
+  if (!tokenManagerData?.parsed) {
+    throw `No tokenManagerData for mint id${mintId.toString()} found`;
+  }
+  if (!tokenManagerData.parsed.transferAuthority) {
+    throw `No transfer authority for token manager`;
+  }
+  const checkListing = await tryGetAccount(() =>
+    getListing(connection, listingId)
+  );
+  if (checkListing) {
+    transaction.add(
+      await withUpdateListing(
+        transaction,
+        connection,
+        wallet,
+        mintId,
+        marketplaceId,
+        paymentAmount,
+        paymentMint
+      )
+    );
+  } else {
+    const mintManagerId = findMintManagerId(mintId);
+    const createListingIx = await transferAuthProgram.methods
+      .createListing({
+        paymentAmount: paymentAmount,
+        paymentMint: paymentMint,
+      })
+      .accounts({
+        listing: listingId,
+        transferAuthority: tokenManagerData.parsed.transferAuthority,
+        marketplace: marketplaceId,
+        tokenManager: tokenManagerId,
+        mint: mintId,
+        mintManager: mintManagerId,
+        listerTokenAccount: listerTokenAccountId,
+        lister: wallet.publicKey,
+        payer: payer ?? wallet.publicKey,
+        cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      })
+      .instruction();
+    transaction.add(createListingIx);
   }
 
-  transaction.add(
-    await createListing(
-      connection,
-      wallet,
-      listingId,
-      mintId,
-      markeptlaceData.parsed.transferAuthority,
-      tokenManagerId,
-      marketplaceId,
-      listerTokenAccountId,
-      paymentAmount,
-      paymentMint,
-      payer
-    )
-  );
   return [transaction, marketplaceId];
 };
 
@@ -287,25 +317,36 @@ export const withUpdateListing = async (
   connection: Connection,
   wallet: Wallet,
   mintId: PublicKey,
+  marketplaceId: PublicKey,
   paymentAmount: BN,
   paymentMint: PublicKey
 ): Promise<Transaction> => {
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
   const listingData = await tryGetAccount(() => getListing(connection, mintId));
   if (!listingData?.parsed) {
     throw `No listing found for mint address ${mintId.toString()}`;
   }
-
-  const [listingId] = await findListingAddress(mintId);
-  transaction.add(
-    updateListing(
-      connection,
-      wallet,
-      listingId,
-      listingData.parsed.marketplace,
-      paymentAmount,
-      paymentMint
-    )
+  const listerMintTokenAccountId = await findAta(
+    mintId,
+    wallet.publicKey,
+    true
   );
+
+  const listingId = findListingAddress(mintId);
+  const updateListingIx = await transferAuthProgram.methods
+    .updateListing({
+      marketplace: marketplaceId,
+      paymentAmount: paymentAmount,
+      paymentMint: paymentMint,
+    })
+    .accounts({
+      tokenManager: listingData.parsed.tokenManager,
+      listing: listingId,
+      listerMintTokenAccount: listerMintTokenAccountId,
+      lister: wallet.publicKey,
+    })
+    .instruction();
+  transaction.add(updateListingIx);
   return transaction;
 };
 
@@ -314,19 +355,27 @@ export const withRemoveListing = async (
   connection: Connection,
   wallet: Wallet,
   mintId: PublicKey,
-  listingTokenAccountId: PublicKey
+  listerMintTokenAccountId: PublicKey
 ): Promise<Transaction> => {
-  const [listingId] = await findListingAddress(mintId);
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const listingId = findListingAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
+  const mintManagerId = findMintManagerId(mintId);
 
-  transaction.add(
-    await removeListing(
-      connection,
-      wallet,
-      listingId,
-      mintId,
-      listingTokenAccountId
-    )
-  );
+  const removeListingIx = await transferAuthProgram.methods
+    .removeListing()
+    .accounts({
+      tokenManager: tokenManagerId,
+      listing: listingId,
+      listerMintTokenAccount: listerMintTokenAccountId,
+      lister: wallet.publicKey,
+      mint: mintId,
+      mintManager: mintManagerId,
+      cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .instruction();
+  transaction.add(removeListingIx);
   return transaction;
 };
 
@@ -335,8 +384,13 @@ export const withAcceptListing = async (
   connection: Connection,
   wallet: Wallet,
   buyer: PublicKey,
-  mintId: PublicKey
+  mintId: PublicKey,
+  paymentAmount: BN,
+  paymentMint: PublicKey,
+  buySideReceiver?: PublicKey,
+  payer = buyer
 ): Promise<Transaction> => {
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
   const listingData = await tryGetAccount(() => getListing(connection, mintId));
   if (!listingData?.parsed) {
     throw `No listing found with mint id ${mintId.toString()}`;
@@ -353,15 +407,17 @@ export const withAcceptListing = async (
   if (!paymentManagerData?.parsed) {
     throw `No payment manager found for marketplace with name ${marketplaceData.parsed.name}`;
   }
+  const nativePayment = paymentMint.toString() === PublicKey.default.toString();
 
-  const listerPaymentTokenAccountId =
-    await withFindOrInitAssociatedTokenAccount(
-      transaction,
-      connection,
-      listingData.parsed.paymentMint,
-      listingData.parsed.lister,
-      wallet.publicKey
-    );
+  const listerPaymentTokenAccountId = nativePayment
+    ? listingData.parsed.lister
+    : await withFindOrInitAssociatedTokenAccount(
+        transaction,
+        connection,
+        listingData.parsed.paymentMint,
+        listingData.parsed.lister,
+        wallet.publicKey
+      );
 
   const listerMintTokenAccountId = await findAta(
     mintId,
@@ -369,16 +425,17 @@ export const withAcceptListing = async (
     true
   );
 
-  const buyerPaymentTokenAccountId =
-    listingData.parsed.lister.toString() === buyer.toString()
-      ? await findAta(listingData.parsed.paymentMint, buyer, true)
-      : await withFindOrInitAssociatedTokenAccount(
-          transaction,
-          connection,
-          listingData.parsed.paymentMint,
-          buyer,
-          wallet.publicKey
-        );
+  const payerPaymentTokenAccountId = nativePayment
+    ? payer
+    : listingData.parsed.lister.toString() !== payer.toString()
+    ? await withFindOrInitAssociatedTokenAccount(
+        transaction,
+        connection,
+        listingData.parsed.paymentMint,
+        payer,
+        wallet.publicKey
+      )
+    : listerPaymentTokenAccountId;
 
   if (listingData.parsed.paymentMint.toString() === WSOL_MINT.toString()) {
     await withWrapSol(
@@ -398,21 +455,24 @@ export const withAcceptListing = async (
           connection,
           mintId,
           buyer,
-          wallet.publicKey
+          wallet.publicKey,
+          true
         );
 
-  const feeCollectorTokenAccountId = await withFindOrInitAssociatedTokenAccount(
-    transaction,
-    connection,
-    listingData.parsed.paymentMint,
-    paymentManagerData?.parsed.feeCollector,
-    wallet.publicKey
-  );
+  const feeCollectorTokenAccountId = nativePayment
+    ? paymentManagerData?.parsed.feeCollector
+    : await withFindOrInitAssociatedTokenAccount(
+        transaction,
+        connection,
+        listingData.parsed.paymentMint,
+        paymentManagerData?.parsed.feeCollector,
+        wallet.publicKey,
+        true
+      );
 
-  const mintMetadataId = await Metadata.getPDA(mintId);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
-  const [transferReceiptId] = await findTransferReceiptId(tokenManagerId);
-  const [transferId] = await findTransferAddress(mintId);
+  const mintMetadataId = findMintMetadataId(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
+  const transferReceiptId = findTransferReceiptId(tokenManagerId);
 
   const remainingAccountsForHandlePaymentWithRoyalties =
     await withRemainingAccountsForHandlePaymentWithRoyalties(
@@ -421,6 +481,7 @@ export const withAcceptListing = async (
       wallet,
       mintId,
       listingData.parsed.paymentMint,
+      buySideReceiver,
       [listingData.parsed.lister.toString(), buyer.toString()]
     );
 
@@ -428,7 +489,10 @@ export const withAcceptListing = async (
   if (!tokenManagerData) {
     throw `No token manager found for ${mintId.toString()}`;
   }
-  const remainingAccountsForKind = await getRemainingAccountsForKind(
+  if (!tokenManagerData.parsed.transferAuthority) {
+    throw `No transfer authority for token manager`;
+  }
+  const remainingAccountsForKind = getRemainingAccountsForKind(
     mintId,
     tokenManagerData.parsed.kind
   );
@@ -437,30 +501,46 @@ export const withAcceptListing = async (
     ...remainingAccountsForKind,
   ];
 
-  transaction.add(
-    acceptListing(
-      connection,
-      wallet,
-      marketplaceData.parsed.transferAuthority,
-      listerPaymentTokenAccountId,
-      listerMintTokenAccountId,
-      listingData.parsed.lister,
-      buyerPaymentTokenAccountId,
-      buyerMintTokenAccountId,
-      buyer,
-      marketplaceData.pubkey,
-      mintId,
-      listingData.pubkey,
-      tokenManagerId,
-      mintMetadataId,
-      transferReceiptId,
-      transferId,
-      marketplaceData.parsed.paymentManager,
-      listingData.parsed.paymentMint,
-      feeCollectorTokenAccountId,
-      remainingAccounts
-    )
-  );
+  if (
+    (paymentAmount && !paymentAmount.eq(listingData.parsed.paymentAmount)) ||
+    (paymentMint && !paymentMint.equals(listingData.parsed.paymentMint))
+  ) {
+    throw "Listing data does not match expected values";
+  }
+
+  const acceptListingIx = await transferAuthProgram.methods
+    .acceptListing({
+      paymentAmount: paymentAmount,
+    })
+    .accounts({
+      transferAuthority: tokenManagerData.parsed.transferAuthority,
+      transferReceipt: transferReceiptId,
+      listing: listingData.pubkey,
+      listerPaymentTokenAccount: listerPaymentTokenAccountId,
+      listerMintTokenAccount: listerMintTokenAccountId,
+      lister: listingData.parsed.lister,
+      buyerMintTokenAccount: buyerMintTokenAccountId,
+      buyer: buyer,
+      payer: payer ?? buyer,
+      payerPaymentTokenAccount: payerPaymentTokenAccountId,
+      marketplace: marketplaceData.pubkey,
+      tokenManager: tokenManagerData.pubkey,
+      mint: tokenManagerData.parsed.mint,
+      mintMetadataInfo: mintMetadataId,
+      paymentManager: marketplaceData.parsed.paymentManager,
+      paymentMint: paymentMint,
+      feeCollectorTokenAccount: feeCollectorTokenAccountId,
+      feeCollector: paymentManagerData.parsed.feeCollector,
+      cardinalPaymentManager: PAYMENT_MANAGER_ADDRESS,
+      cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
+      associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    })
+    .remainingAccounts(remainingAccounts)
+    .instruction();
+  transaction.add(acceptListingIx);
 
   return transaction;
 };
@@ -472,18 +552,23 @@ export const withWhitelistMarektplaces = async (
   transferAuthorityName: string,
   marketplaceNames: string[]
 ): Promise<Transaction> => {
-  const [transferAuthority] = await findTransferAuthorityAddress(
-    transferAuthorityName
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const transferAuthority = findTransferAuthorityAddress(transferAuthorityName);
+
+  const marketplaceIds = marketplaceNames.map((name) =>
+    findMarketplaceAddress(name)
   );
 
-  const marketplaceIds = (
-    await Promise.all(
-      marketplaceNames.map((name) => findMarketplaceAddress(name))
-    )
-  ).map((el) => el[0]);
-  transaction.add(
-    whitelistMarkeplaces(connection, wallet, transferAuthority, marketplaceIds)
-  );
+  const whitelistMarketplaceIx = await transferAuthProgram.methods
+    .whitelistMarketplaces({
+      allowedMarketplaces: marketplaceIds,
+    })
+    .accounts({
+      transferAuthority: transferAuthority,
+      authority: wallet.publicKey,
+    })
+    .instruction();
+  transaction.add(whitelistMarketplaceIx);
   return transaction;
 };
 
@@ -496,18 +581,24 @@ export const withInitTransfer = async (
   holderTokenAccountId: PublicKey,
   payer = wallet.publicKey
 ): Promise<Transaction> => {
-  const [transferId] = await findTransferAddress(mintId);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
-  transaction.add(
-    initTransfer(connection, wallet, {
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const transferId = findTransferAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
+
+  const initTransferIx = await transferAuthProgram.methods
+    .initTransfer({
       to: to,
-      transferId: transferId,
-      tokenManagerId: tokenManagerId,
-      holderTokenAccountId: holderTokenAccountId,
-      holder: wallet.publicKey,
-      payer: payer,
     })
-  );
+    .accounts({
+      transfer: transferId,
+      tokenManager: tokenManagerId,
+      holderTokenAccount: holderTokenAccountId,
+      holder: wallet.publicKey,
+      payer: payer ?? wallet.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+  transaction.add(initTransferIx);
   return transaction;
 };
 
@@ -517,22 +608,26 @@ export const withCancelTransfer = async (
   wallet: Wallet,
   mintId: PublicKey
 ): Promise<Transaction> => {
-  const [transferId] = await findTransferAddress(mintId);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const transferId = findTransferAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
   const checkTokenManager = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
   if (!checkTokenManager) {
     throw `No token manager found for mint id ${mintId.toString()}`;
   }
-  transaction.add(
-    cancelTransfer(connection, wallet, {
-      transferId: transferId,
-      tokenManagerId: tokenManagerId,
-      holderTokenAccountId: checkTokenManager.parsed.recipientTokenAccount,
+
+  const cancelTransferIx = await transferAuthProgram.methods
+    .cancelTransfer()
+    .accounts({
+      transfer: transferId,
+      tokenManager: tokenManagerId,
+      holderTokenAccount: checkTokenManager.parsed.recipientTokenAccount,
       holder: wallet.publicKey,
     })
-  );
+    .instruction();
+  transaction.add(cancelTransferIx);
   return transaction;
 };
 
@@ -544,10 +639,11 @@ export const withAcceptTransfer = async (
   recipient: PublicKey,
   holder: PublicKey
 ): Promise<Transaction> => {
-  const [transferId] = await findTransferAddress(mintId);
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
-  const [transferReceiptId] = await findTransferReceiptId(tokenManagerId);
-  const [listingId] = await findListingAddress(mintId);
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const transferId = findTransferAddress(mintId);
+  const tokenManagerId = findTokenManagerAddress(mintId);
+  const transferReceiptId = findTransferReceiptId(tokenManagerId);
+  const listingId = findListingAddress(mintId);
   const tokenManagerData = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
@@ -559,31 +655,38 @@ export const withAcceptTransfer = async (
   }
   const recipientTokenAccountId = await findAta(mintId, recipient, true);
   const remainingAccountsForTransfer = [
-    ...(await getRemainingAccountsForKind(
-      mintId,
-      tokenManagerData.parsed.kind
-    )),
+    ...getRemainingAccountsForKind(mintId, tokenManagerData.parsed.kind),
     {
       pubkey: transferReceiptId,
       isSigner: false,
       isWritable: true,
     },
   ];
-  transaction.add(
-    acceptTransfer(connection, wallet, {
-      transferId: transferId,
-      tokenManagerId: tokenManagerId,
-      holderTokenAccountId: tokenManagerData.parsed.recipientTokenAccount,
-      holder: holder,
+
+  const accceptTransferIx = await transferAuthProgram.methods
+    .acceptTransfer()
+    .accounts({
+      transfer: transferId,
+      transferAuthority: tokenManagerData.parsed.transferAuthority,
+      transferReceipt: transferReceiptId,
+      listing: listingId,
+      tokenManager: tokenManagerId,
+      mint: mintId,
+      recipientTokenAccount: recipientTokenAccountId,
       recipient: recipient,
-      recipientTokenAccountId: recipientTokenAccountId,
-      mintId: mintId,
-      transferReceiptId: transferReceiptId,
-      listingId: listingId,
-      transferAuthorityId: tokenManagerData.parsed.transferAuthority,
-      remainingAccounts: remainingAccountsForTransfer,
+      payer: wallet.publicKey,
+      holderTokenAccount: tokenManagerData.parsed.recipientTokenAccount,
+      holder: holder,
+      cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+      instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     })
-  );
+    .remainingAccounts(remainingAccountsForTransfer)
+    .instruction();
+  transaction.add(accceptTransferIx);
   return transaction;
 };
 
@@ -596,14 +699,15 @@ export const withRelease = async (
   holderTokenAccountId: PublicKey,
   payer = wallet.publicKey
 ): Promise<Transaction> => {
-  const [tokenManagerId] = await findTokenManagerAddress(mintId);
+  const transferAuthProgram = transferAuthorityProgram(connection, wallet);
+  const tokenManagerId = findTokenManagerAddress(mintId);
   const checkTokenManager = await tryGetAccount(() =>
     getTokenManager(connection, tokenManagerId)
   );
   if (!checkTokenManager) {
     throw `No token manager found for mint id ${mintId.toString()}`;
   }
-  const tokenManagerTokenAccount = await withFindOrInitAssociatedTokenAccount(
+  const tokenManagerTokenAccountId = await withFindOrInitAssociatedTokenAccount(
     transaction,
     connection,
     mintId,
@@ -612,7 +716,7 @@ export const withRelease = async (
     true
   );
   const tokenManagerData = await getTokenManager(connection, tokenManagerId);
-  const remainingAccountsForKind = await getRemainingAccountsForKind(
+  const remainingAccountsForKind = getRemainingAccountsForKind(
     mintId,
     tokenManagerData.parsed.kind
   );
@@ -622,19 +726,26 @@ export const withRelease = async (
     wallet,
     tokenManagerData
   );
-  transaction.add(
-    release(connection, wallet, {
-      transferAuthorityId: transferAuthorityId,
-      tokenManagerId: tokenManagerId,
-      mintId: mintId,
-      tokenManagerTokenAccountId: tokenManagerTokenAccount,
-      holderTokenAccountId: holderTokenAccountId,
+
+  const releaseIx = await transferAuthProgram.methods
+    .release()
+    .accounts({
+      transferAuthority: transferAuthorityId,
+      tokenManager: tokenManagerId,
+      mint: mintId,
+      tokenManagerTokenAccount: tokenManagerTokenAccountId,
+      holderTokenAccount: holderTokenAccountId,
       holder: wallet.publicKey,
-      remainingAccounts: [
-        ...remainingAccountsForKind,
-        ...remainingAccountsForReturn,
-      ],
+      collector: wallet.publicKey,
+      cardinalTokenManager: TOKEN_MANAGER_ADDRESS,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
     })
-  );
+    .remainingAccounts([
+      ...remainingAccountsForKind,
+      ...remainingAccountsForReturn,
+    ])
+    .instruction();
+  transaction.add(releaseIx);
   return transaction;
 };

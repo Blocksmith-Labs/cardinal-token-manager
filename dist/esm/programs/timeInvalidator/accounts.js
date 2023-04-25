@@ -1,23 +1,18 @@
-import { AnchorProvider, BN, BorshAccountsCoder, Program, } from "@project-serum/anchor";
-import { SignerWallet } from "@saberhq/solana-contrib";
-import { Keypair } from "@solana/web3.js";
-import { TIME_INVALIDATOR_ADDRESS, TIME_INVALIDATOR_IDL } from "./constants";
+import { BN, BorshAccountsCoder } from "@project-serum/anchor";
+import { TIME_INVALIDATOR_ADDRESS, TIME_INVALIDATOR_IDL, timeInvalidatorProgram, } from "./constants";
 export const getTimeInvalidator = async (connection, timeInvalidatorId) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const timeInvalidatorProgram = new Program(TIME_INVALIDATOR_IDL, TIME_INVALIDATOR_ADDRESS, provider);
-    const parsed = await timeInvalidatorProgram.account.timeInvalidator.fetch(timeInvalidatorId);
+    const program = timeInvalidatorProgram(connection);
+    const parsed = await program.account.timeInvalidator.fetch(timeInvalidatorId);
     return {
         parsed,
         pubkey: timeInvalidatorId,
     };
 };
 export const getTimeInvalidators = async (connection, timeInvalidatorIds) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const timeInvalidatorProgram = new Program(TIME_INVALIDATOR_IDL, TIME_INVALIDATOR_ADDRESS, provider);
+    const program = timeInvalidatorProgram(connection);
     let timeInvalidators = [];
     try {
-        timeInvalidators =
-            (await timeInvalidatorProgram.account.timeInvalidator.fetchMultiple(timeInvalidatorIds));
+        timeInvalidators = (await program.account.timeInvalidator.fetchMultiple(timeInvalidatorIds));
     }
     catch (e) {
         console.log(e);

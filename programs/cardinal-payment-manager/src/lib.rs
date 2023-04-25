@@ -18,11 +18,12 @@ pub mod cardinal_payment_manager {
         handle_payment::handler(ctx, payment_amount)
     }
 
-    pub fn handle_payment_with_royalties<'key, 'accounts, 'remaining, 'info>(
-        ctx: Context<'key, 'accounts, 'remaining, 'info, HandlePaymentWithRoyaltiesCtx<'info>>,
-        payment_amount: u64,
-    ) -> Result<()> {
+    pub fn handle_payment_with_royalties<'info>(ctx: Context<'_, '_, '_, 'info, HandlePaymentWithRoyaltiesCtx<'info>>, payment_amount: u64) -> Result<()> {
         handle_payment_with_royalties::handler(ctx, payment_amount)
+    }
+
+    pub fn handle_native_payment_with_royalties<'info>(ctx: Context<'_, '_, '_, 'info, HandleNativePaymentWithRoyaltiesCtx<'info>>, payment_amount: u64) -> Result<()> {
+        handle_native_payment_with_royalties::handler(ctx, payment_amount)
     }
 
     pub fn close(ctx: Context<CloseCtx>) -> Result<()> {

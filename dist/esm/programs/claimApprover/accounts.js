@@ -1,25 +1,20 @@
-import { AnchorProvider, BorshAccountsCoder, Program, } from "@project-serum/anchor";
-import { SignerWallet } from "@saberhq/solana-contrib";
-import { Keypair } from "@solana/web3.js";
-import { CLAIM_APPROVER_ADDRESS, CLAIM_APPROVER_IDL } from "./constants";
+import { BorshAccountsCoder } from "@project-serum/anchor";
+import { CLAIM_APPROVER_ADDRESS, CLAIM_APPROVER_IDL, claimApproverProgram, } from "./constants";
 import { findClaimApproverAddress } from "./pda";
 export const getClaimApprover = async (connection, tokenManagerId) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const claimApproverProgram = new Program(CLAIM_APPROVER_IDL, CLAIM_APPROVER_ADDRESS, provider);
-    const [claimApproverId] = await findClaimApproverAddress(tokenManagerId);
-    const parsed = await claimApproverProgram.account.paidClaimApprover.fetch(claimApproverId);
+    const program = claimApproverProgram(connection);
+    const claimApproverId = findClaimApproverAddress(tokenManagerId);
+    const parsed = await program.account.paidClaimApprover.fetch(claimApproverId);
     return {
         parsed,
         pubkey: claimApproverId,
     };
 };
 export const getClaimApprovers = async (connection, claimApproverIds) => {
-    const provider = new AnchorProvider(connection, new SignerWallet(Keypair.generate()), {});
-    const claimApproverProgram = new Program(CLAIM_APPROVER_IDL, CLAIM_APPROVER_ADDRESS, provider);
+    const program = claimApproverProgram(connection);
     let claimApprovers = [];
     try {
-        claimApprovers =
-            (await claimApproverProgram.account.paidClaimApprover.fetchMultiple(claimApproverIds));
+        claimApprovers = (await program.account.paidClaimApprover.fetchMultiple(claimApproverIds));
     }
     catch (e) {
         console.log(e);

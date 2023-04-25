@@ -1,6 +1,6 @@
 {
   "name": "@cardinal/token-manager",
-  "version": "1.7.4",
+  "version": "4.4.1",
   "description": "Cardinal token manager SDK",
   "keywords": [
     "solana",
@@ -20,56 +20,13 @@
   "scripts": {
     "build": "rm -fr dist/ && tsc -P tsconfig.cjs.json && tsc -P tsconfig.esm.json",
     "clean": "rm -fr dist/",
-    "idl:generate": "./scripts/generate-idls-types.sh",
+    "idl:generate": "./generate-idls.sh",
+    "docs:generate": "typedoc --excludePrivate --includeVersion --out site/ src/index.ts",
     "typecheck": "tsc",
-    "lint": "eslint . --cache",
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --fix",
     "lint:ci": "eslint . --max-warnings=0",
-    "test:e2e": "anchor test --skip-build 'tests/**/*.ts'",
-    "docs:generate": "typedoc --excludePrivate --includeVersion --out site/ src/index.ts"
-  },
-  "devDependencies": {
-    "@project-serum/anchor": "^0.24.2",
-    "@rushstack/eslint-patch": "^1.1.0",
-    "@saberhq/anchor-contrib": "^1.12.44",
-    "@saberhq/chai-solana": "^1.12.44",
-    "@saberhq/eslint-config": "^1.12.44",
-    "@saberhq/solana-contrib": "^1.12.44",
-    "@saberhq/token-utils": "^1.12.44",
-    "@saberhq/tsconfig": "^1.13.17",
-    "@solana/web3.js": "^1.34.0",
-    "@types/bn.js": "^5.1.0",
-    "@types/bs58": "^4",
-    "@types/chai": "^4.3.0",
-    "@types/mocha": "^9.1.0",
-    "@types/node": "^17.0.10",
-    "@types/prettier": "^2.4.3",
-    "bn.js": "^5.2.0",
-    "chai": "=4.3.4",
-    "eslint": "^8.7.0",
-    "eslint-import-resolver-node": "^0.3.6",
-    "eslint-plugin-import": "^2.26.0",
-    "husky": "^7.0.0",
-    "jsbi": "^4.1.0",
-    "lint-staged": "^12.2.2",
-    "mocha": "^9.1.4",
-    "mocha-junit-reporter": "^2.0.2",
-    "prettier": "2.6.2",
-    "ts-node": "^10.5.0",
-    "typedoc": "^0.22.11",
-    "typescript": "^4.5.5"
-  },
-  "peerDependencies": {
-    "@project-serum/anchor": ">=0.19",
-    "@saberhq/anchor-contrib": "^1.11",
-    "@saberhq/solana-contrib": "^1.11",
-    "@saberhq/token-utils": "^1.11",
-    "@solana/web3.js": "^1",
-    "bn.js": "^5.2.0",
-    "jsbi": "^3 || ^4"
-  },
-  "resolutions": {
-    "bn.js": "^5.2.0",
-    "@types/bn.js": "^5.1.0"
+    "prepare": "husky install",
+    "test": "jest --setupFiles dotenv/config --detectOpenHandles"
   },
   "publishConfig": {
     "access": "public"
@@ -83,16 +40,42 @@
     "*.{js,json,jsx,html,css,md}": "prettier --write"
   },
   "dependencies": {
-    "@cardinal/common": "^2.0.12",
-    "@metaplex-foundation/mpl-token-metadata": "^1.2.5",
-    "@solana/buffer-layout": "^4.0.0",
-    "@solana/buffer-layout-utils": "^0.2.0",
-    "@solana/spl-token": "^0.1.8",
-    "borsh": "^0.7.0",
-    "bs58": "^4.0.1",
-    "superstruct": "^0.15.4",
-    "tiny-invariant": "^1.2.0",
-    "tslib": "^2.3.1"
+    "@cardinal/common": "^7.1.3",
+    "@cardinal/creator-standard": "^2.1.7",
+    "@cardinal/payment-manager": "^4.0.1",
+    "@metaplex-foundation/mpl-token-auth-rules": "^1.0.0",
+    "@metaplex-foundation/mpl-token-metadata": "^2.8.3",
+    "@msgpack/msgpack": "^2.8.0",
+    "@project-serum/anchor": "^0.26.0",
+    "@solana/spl-token": "^0.3.6",
+    "@solana/web3.js": "^1.34.0"
   },
-  "packageManager": "yarn@3.1.1"
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "@types/jest": "^29.2.4",
+    "@types/node-fetch": "^2.6.2",
+    "@types/prettier": "^2.7.2",
+    "@typescript-eslint/eslint-plugin": "^5.47.0",
+    "@typescript-eslint/parser": "^5.47.0",
+    "bn.js": "^5.2.0",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.7.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-node": "^0.3.6",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jest": "^25.3.2",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "husky": "^7.0.0",
+    "jest": "^29.2.1",
+    "jest-junit": "^15.0.0",
+    "jsbi": "^4.1.0",
+    "lint-staged": "^12.2.2",
+    "prettier": "^2.8.1",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.5.0",
+    "typedoc": "^0.22.11",
+    "typescript": "^4.5.5"
+  }
 }

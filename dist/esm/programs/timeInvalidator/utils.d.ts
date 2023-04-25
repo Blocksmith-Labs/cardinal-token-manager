@@ -1,4 +1,4 @@
-import type { AccountData } from "../..";
+import type { AccountData } from "@cardinal/common";
 import type { TokenManagerData } from "../tokenManager";
 import type { TimeInvalidatorData } from ".";
 export declare const shouldTimeInvalidate: (tokenManagerData: AccountData<TokenManagerData>, timeInvalidatorData: AccountData<TimeInvalidatorData>, UTCNow?: number) => boolean;

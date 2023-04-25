@@ -2,7 +2,8 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
-use {anchor_lang::prelude::*, instructions::*};
+use anchor_lang::prelude::*;
+use instructions::*;
 
 declare_id!("638EtvgGQTmc2jc9SdAPtLSCjSXRrkyBfSd54xP2pquZ");
 
@@ -37,8 +38,8 @@ pub mod cardinal_transfer_authority {
         listing::update_listing::handler(ctx, ix)
     }
 
-    pub fn accept_listing<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts, 'remaining, 'info, AcceptListingCtx<'info>>) -> Result<()> {
-        listing::accept_listing::handler(ctx)
+    pub fn accept_listing<'key, 'accounts, 'remaining, 'info>(ctx: Context<'key, 'accounts, 'remaining, 'info, AcceptListingCtx<'info>>, ix: AcceptListingIx) -> Result<()> {
+        listing::accept_listing::handler(ctx, ix)
     }
 
     pub fn remove_listing(ctx: Context<RemoveListingCtx>) -> Result<()> {

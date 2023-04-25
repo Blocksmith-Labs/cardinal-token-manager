@@ -1,16 +1,16 @@
-use {
-    crate::{errors::ErrorCode, state::*},
-    anchor_lang::{
-        prelude::*,
-        solana_program::program::{invoke, invoke_signed},
-    },
-    anchor_spl::{
-        associated_token::{self, AssociatedToken},
-        token::{self, Token},
-    },
-    mpl_token_metadata::{instruction::create_metadata_accounts_v2, state::Creator},
-    solana_program::{program_pack::Pack, system_instruction::create_account},
-};
+use crate::errors::ErrorCode;
+use crate::state::*;
+use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program::invoke;
+use anchor_lang::solana_program::program::invoke_signed;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::associated_token::{self};
+use anchor_spl::token::Token;
+use anchor_spl::token::{self};
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use mpl_token_metadata::state::Creator;
+use solana_program::program_pack::Pack;
+use solana_program::system_instruction::create_account;
 
 #[derive(Accounts)]
 pub struct ClaimReceiptMintCtx<'info> {
@@ -85,7 +85,7 @@ pub fn handler(ctx: Context<ClaimReceiptMintCtx>, name: String) -> Result<()> {
 
     // create metadata
     invoke_signed(
-        &create_metadata_accounts_v2(
+        &create_metadata_accounts_v3(
             *ctx.accounts.token_metadata_program.key,
             *ctx.accounts.receipt_mint_metadata.key,
             *ctx.accounts.receipt_mint.key,
@@ -118,6 +118,7 @@ pub fn handler(ctx: Context<ClaimReceiptMintCtx>, name: String) -> Result<()> {
             true,
             None,
             None,
+            None,
         ),
         &[
             ctx.accounts.receipt_mint_metadata.to_account_info(),
@@ -139,7 +140,6 @@ pub fn handler(ctx: Context<ClaimReceiptMintCtx>, name: String) -> Result<()> {
         mint: ctx.accounts.receipt_mint.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
-        rent: ctx.accounts.rent.to_account_info(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
