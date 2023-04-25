@@ -16,20 +16,20 @@ exports.withRelease =
   exports.withWrapToken =
     void 0;
 const common_1 = require("@cardinal/common");
-const payment_manager_1 = require("@cardinal/payment-manager");
-const accounts_1 = require("@cardinal/payment-manager/dist/cjs/accounts");
-const pda_1 = require("@cardinal/payment-manager/dist/cjs/pda");
-const utils_1 = require("@cardinal/payment-manager/dist/cjs/utils");
 const token_1 = require("@project-serum/anchor/dist/cjs/utils/token");
 const spl_token_1 = require("@solana/spl-token");
 const web3_js_1 = require("@solana/web3.js");
 const tokenManager_1 = require("./programs/tokenManager");
-const accounts_2 = require("./programs/tokenManager/accounts");
-const pda_2 = require("./programs/tokenManager/pda");
+const accounts_1 = require("./programs/tokenManager/accounts");
+const pda_1 = require("./programs/tokenManager/pda");
 const transferAuthority_1 = require("./programs/transferAuthority");
-const accounts_3 = require("./programs/transferAuthority/accounts");
-const pda_3 = require("./programs/transferAuthority/pda");
+const accounts_2 = require("./programs/transferAuthority/accounts");
+const pda_2 = require("./programs/transferAuthority/pda");
 const transaction_1 = require("./transaction");
+const pda_3 = require("./programs/paymentManager/pda");
+const accounts_3 = require("./programs/paymentManager/accounts");
+const utils_1 = require("./programs/paymentManager/utils");
+const paymentManager_1 = require("./programs/paymentManager");
 const withWrapToken = async (
   transaction,
   connection,
@@ -42,9 +42,9 @@ const withWrapToken = async (
     connection,
     wallet
   );
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
   const checkTokenManager = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_2.getTokenManager)(connection, tokenManagerId)
+    (0, accounts_1.getTokenManager)(connection, tokenManagerId)
   );
   if (
     checkTokenManager === null || checkTokenManager === void 0
@@ -128,7 +128,7 @@ const withInitTransferAuthority = async (
     connection,
     wallet
   );
-  const transferAuthorityId = (0, pda_3.findTransferAuthorityAddress)(name);
+  const transferAuthorityId = (0, pda_2.findTransferAuthorityAddress)(name);
   const initTransferAuthorityIx = await transferAuthProgram.methods
     .initTransferAuthority({
       name: name,
@@ -160,7 +160,7 @@ const withUpdateTransferAuthority = async (
     connection,
     wallet
   );
-  const transferAuthorityId = (0, pda_3.findTransferAuthorityAddress)(name);
+  const transferAuthorityId = (0, pda_2.findTransferAuthorityAddress)(name);
   const updateTransferAuthorityIx = await transferAuthProgram.methods
     .updateTransferAuthority({
       authority: authority,
@@ -188,8 +188,8 @@ const withInitMarketplace = async (
     connection,
     wallet
   );
-  const marketplaceId = (0, pda_3.findMarketplaceAddress)(name);
-  const paymentManagerId = (0, pda_1.findPaymentManagerAddress)(
+  const marketplaceId = (0, pda_2.findMarketplaceAddress)(name);
+  const paymentManagerId = (0, pda_3.findPaymentManagerAddress)(
     paymentManagerName
   );
   const initMarketplaceIx = await transferAuthProgram.methods
@@ -223,8 +223,8 @@ const withUpdateMarketplace = async (
     connection,
     wallet
   );
-  const marketplaceId = (0, pda_3.findMarketplaceAddress)(name);
-  const paymentManagerId = (0, pda_1.findPaymentManagerAddress)(
+  const marketplaceId = (0, pda_2.findMarketplaceAddress)(name);
+  const paymentManagerId = (0, pda_3.findPaymentManagerAddress)(
     paymentManagerName
   );
   const updateMarketplaceIx = await transferAuthProgram.methods
@@ -256,16 +256,16 @@ const withCreateListing = async (
     connection,
     wallet
   );
-  const listingId = (0, pda_3.findListingAddress)(mintId);
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
+  const listingId = (0, pda_2.findListingAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
   const listerTokenAccountId = await (0, common_1.findAta)(
     mintId,
     wallet.publicKey,
     true
   );
-  const marketplaceId = (0, pda_3.findMarketplaceAddress)(markeptlaceName);
+  const marketplaceId = (0, pda_2.findMarketplaceAddress)(markeptlaceName);
   const tokenManagerData = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_2.getTokenManager)(connection, tokenManagerId)
+    (0, accounts_1.getTokenManager)(connection, tokenManagerId)
   );
   if (
     !(tokenManagerData === null || tokenManagerData === void 0
@@ -278,7 +278,7 @@ const withCreateListing = async (
     throw `No transfer authority for token manager`;
   }
   const checkListing = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_3.getListing)(connection, listingId)
+    (0, accounts_2.getListing)(connection, listingId)
   );
   if (checkListing) {
     transaction.add(
@@ -293,7 +293,7 @@ const withCreateListing = async (
       )
     );
   } else {
-    const mintManagerId = (0, pda_2.findMintManagerId)(mintId);
+    const mintManagerId = (0, pda_1.findMintManagerId)(mintId);
     const createListingIx = await transferAuthProgram.methods
       .createListing({
         paymentAmount: paymentAmount,
@@ -334,7 +334,7 @@ const withUpdateListing = async (
     wallet
   );
   const listingData = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_3.getListing)(connection, mintId)
+    (0, accounts_2.getListing)(connection, mintId)
   );
   if (
     !(listingData === null || listingData === void 0
@@ -348,7 +348,7 @@ const withUpdateListing = async (
     wallet.publicKey,
     true
   );
-  const listingId = (0, pda_3.findListingAddress)(mintId);
+  const listingId = (0, pda_2.findListingAddress)(mintId);
   const updateListingIx = await transferAuthProgram.methods
     .updateListing({
       marketplace: marketplaceId,
@@ -377,9 +377,9 @@ const withRemoveListing = async (
     connection,
     wallet
   );
-  const listingId = (0, pda_3.findListingAddress)(mintId);
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
-  const mintManagerId = (0, pda_2.findMintManagerId)(mintId);
+  const listingId = (0, pda_2.findListingAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
+  const mintManagerId = (0, pda_1.findMintManagerId)(mintId);
   const removeListingIx = await transferAuthProgram.methods
     .removeListing()
     .accounts({
@@ -413,7 +413,7 @@ const withAcceptListing = async (
     wallet
   );
   const listingData = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_3.getListing)(connection, mintId)
+    (0, accounts_2.getListing)(connection, mintId)
   );
   if (
     !(listingData === null || listingData === void 0
@@ -423,7 +423,7 @@ const withAcceptListing = async (
     throw `No listing found with mint id ${mintId.toString()}`;
   }
   const marketplaceData = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_3.getMarketplace)(connection, listingData.parsed.marketplace)
+    (0, accounts_2.getMarketplace)(connection, listingData.parsed.marketplace)
   );
   if (
     !(marketplaceData === null || marketplaceData === void 0
@@ -433,7 +433,7 @@ const withAcceptListing = async (
     throw `No marketplace found with id ${mintId.toString()}`;
   }
   const paymentManagerData = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_1.getPaymentManager)(
+    (0, accounts_3.getPaymentManager)(
       connection,
       marketplaceData.parsed.paymentManager
     )
@@ -510,8 +510,8 @@ const withAcceptListing = async (
         true
       );
   const mintMetadataId = (0, common_1.findMintMetadataId)(mintId);
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
-  const transferReceiptId = (0, pda_2.findTransferReceiptId)(tokenManagerId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
+  const transferReceiptId = (0, pda_1.findTransferReceiptId)(tokenManagerId);
   const remainingAccountsForHandlePaymentWithRoyalties = await (0,
   utils_1.withRemainingAccountsForHandlePaymentWithRoyalties)(
     transaction,
@@ -522,7 +522,7 @@ const withAcceptListing = async (
     buySideReceiver,
     [listingData.parsed.lister.toString(), buyer.toString()]
   );
-  const tokenManagerData = await (0, accounts_2.getTokenManager)(
+  const tokenManagerData = await (0, accounts_1.getTokenManager)(
     connection,
     tokenManagerId
   );
@@ -570,7 +570,7 @@ const withAcceptListing = async (
       paymentMint: paymentMint,
       feeCollectorTokenAccount: feeCollectorTokenAccountId,
       feeCollector: paymentManagerData.parsed.feeCollector,
-      cardinalPaymentManager: payment_manager_1.PAYMENT_MANAGER_ADDRESS,
+      cardinalPaymentManager: paymentManager_1.PAYMENT_MANAGER_ADDRESS,
       cardinalTokenManager: tokenManager_1.TOKEN_MANAGER_ADDRESS,
       associatedTokenProgram: token_1.ASSOCIATED_PROGRAM_ID,
       tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
@@ -594,11 +594,11 @@ const withWhitelistMarektplaces = async (
     connection,
     wallet
   );
-  const transferAuthority = (0, pda_3.findTransferAuthorityAddress)(
+  const transferAuthority = (0, pda_2.findTransferAuthorityAddress)(
     transferAuthorityName
   );
   const marketplaceIds = marketplaceNames.map((name) =>
-    (0, pda_3.findMarketplaceAddress)(name)
+    (0, pda_2.findMarketplaceAddress)(name)
   );
   const whitelistMarketplaceIx = await transferAuthProgram.methods
     .whitelistMarketplaces({
@@ -626,8 +626,8 @@ const withInitTransfer = async (
     connection,
     wallet
   );
-  const transferId = (0, pda_3.findTransferAddress)(mintId);
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
+  const transferId = (0, pda_2.findTransferAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
   const initTransferIx = await transferAuthProgram.methods
     .initTransfer({
       to: to,
@@ -650,10 +650,10 @@ const withCancelTransfer = async (transaction, connection, wallet, mintId) => {
     connection,
     wallet
   );
-  const transferId = (0, pda_3.findTransferAddress)(mintId);
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
+  const transferId = (0, pda_2.findTransferAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
   const checkTokenManager = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_2.getTokenManager)(connection, tokenManagerId)
+    (0, accounts_1.getTokenManager)(connection, tokenManagerId)
   );
   if (!checkTokenManager) {
     throw `No token manager found for mint id ${mintId.toString()}`;
@@ -683,12 +683,12 @@ const withAcceptTransfer = async (
     connection,
     wallet
   );
-  const transferId = (0, pda_3.findTransferAddress)(mintId);
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
-  const transferReceiptId = (0, pda_2.findTransferReceiptId)(tokenManagerId);
-  const listingId = (0, pda_3.findListingAddress)(mintId);
+  const transferId = (0, pda_2.findTransferAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
+  const transferReceiptId = (0, pda_1.findTransferReceiptId)(tokenManagerId);
+  const listingId = (0, pda_2.findListingAddress)(mintId);
   const tokenManagerData = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_2.getTokenManager)(connection, tokenManagerId)
+    (0, accounts_1.getTokenManager)(connection, tokenManagerId)
   );
   if (!tokenManagerData) {
     throw `No token manager found for mint ${mintId.toString()}`;
@@ -752,9 +752,9 @@ const withRelease = async (
     connection,
     wallet
   );
-  const tokenManagerId = (0, pda_2.findTokenManagerAddress)(mintId);
+  const tokenManagerId = (0, pda_1.findTokenManagerAddress)(mintId);
   const checkTokenManager = await (0, common_1.tryGetAccount)(() =>
-    (0, accounts_2.getTokenManager)(connection, tokenManagerId)
+    (0, accounts_1.getTokenManager)(connection, tokenManagerId)
   );
   if (!checkTokenManager) {
     throw `No token manager found for mint id ${mintId.toString()}`;
@@ -768,7 +768,7 @@ const withRelease = async (
     payer,
     true
   );
-  const tokenManagerData = await (0, accounts_2.getTokenManager)(
+  const tokenManagerData = await (0, accounts_1.getTokenManager)(
     connection,
     tokenManagerId
   );

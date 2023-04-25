@@ -16,8 +16,6 @@ import {
   findRulesetId,
   PROGRAM_ADDRESS,
 } from "@cardinal/creator-standard";
-import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
-import { withRemainingAccountsForPayment } from "@cardinal/payment-manager/dist/cjs/utils";
 import {
   Metadata,
   TokenStandard,
@@ -53,6 +51,8 @@ import {
   defaultPaymentManagerId,
 } from "./programs/claimApprover";
 import { findClaimApproverAddress } from "./programs/claimApprover/pda";
+import { PAYMENT_MANAGER_ADDRESS } from "./programs/paymentManager";
+import { withRemainingAccountsForPayment } from "./programs/paymentManager/utils";
 import type { TimeInvalidationParams } from "./programs/timeInvalidator";
 import { timeInvalidatorProgram } from "./programs/timeInvalidator";
 import { findTimeInvalidatorAddress } from "./programs/timeInvalidator/pda";

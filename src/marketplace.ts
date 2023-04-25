@@ -7,10 +7,6 @@ import {
   withFindOrInitAssociatedTokenAccount,
   withWrapSol,
 } from "@cardinal/common";
-import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
-import { getPaymentManager } from "@cardinal/payment-manager/dist/cjs/accounts";
-import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
-import { withRemainingAccountsForHandlePaymentWithRoyalties } from "@cardinal/payment-manager/dist/cjs/utils";
 import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import {
@@ -26,6 +22,10 @@ import {
 } from "@solana/web3.js";
 import type BN from "bn.js";
 
+import { PAYMENT_MANAGER_ADDRESS } from "./programs/paymentManager";
+import { getPaymentManager } from "./programs/paymentManager/accounts";
+import { findPaymentManagerAddress } from "./programs/paymentManager/pda";
+import { withRemainingAccountsForHandlePaymentWithRoyalties } from "./programs/paymentManager/utils";
 import {
   getRemainingAccountsForKind,
   InvalidationType,

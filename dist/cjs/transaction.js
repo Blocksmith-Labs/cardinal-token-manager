@@ -19,8 +19,7 @@ exports.withReplaceInvalidator =
     void 0;
 const common_1 = require("@cardinal/common");
 const creator_standard_1 = require("@cardinal/creator-standard");
-const payment_manager_1 = require("@cardinal/payment-manager");
-const utils_1 = require("@cardinal/payment-manager/dist/cjs/utils");
+const paymentManager_1 = require("./programs/paymentManager");
 const mpl_token_metadata_1 = require("@metaplex-foundation/mpl-token-metadata");
 const anchor_1 = require("@project-serum/anchor");
 const token_1 = require("@project-serum/anchor/dist/cjs/utils/token");
@@ -31,15 +30,16 @@ const claimApprover_1 = require("./programs/claimApprover");
 const pda_1 = require("./programs/claimApprover/pda");
 const timeInvalidator_1 = require("./programs/timeInvalidator");
 const pda_2 = require("./programs/timeInvalidator/pda");
-const utils_2 = require("./programs/timeInvalidator/utils");
+const utils_1 = require("./programs/timeInvalidator/utils");
 const tokenManager_1 = require("./programs/tokenManager");
 const accounts_1 = require("./programs/tokenManager/accounts");
 const pda_3 = require("./programs/tokenManager/pda");
-const utils_3 = require("./programs/tokenManager/utils");
+const utils_2 = require("./programs/tokenManager/utils");
 const accounts_2 = require("./programs/transferAuthority/accounts");
 const pda_4 = require("./programs/transferAuthority/pda");
 const useInvalidator_1 = require("./programs/useInvalidator");
 const pda_5 = require("./programs/useInvalidator/pda");
+const utils_3 = require("./programs/paymentManager/utils");
 /**
  * Main method for issuing any managed token
  * Allows for optional payment, optional usages or expiration and includes a otp for private links
@@ -456,7 +456,7 @@ const withIssueToken = async (
       systemProgram: web3_js_1.SystemProgram.programId,
     })
     .remainingAccounts(
-      (0, utils_3.getRemainingAccountsForIssue)(
+      (0, utils_2.getRemainingAccountsForIssue)(
         kind,
         mint,
         issuerTokenAccountId,
@@ -585,7 +585,7 @@ const withClaimToken = async (
       issuerTokenAccountId,
       feeCollectorTokenAccountId,
       remainingAccounts,
-    ] = await (0, utils_1.withRemainingAccountsForPayment)(
+    ] = await (0, utils_3.withRemainingAccountsForPayment)(
       transaction,
       connection,
       wallet,
@@ -617,7 +617,7 @@ const withClaimToken = async (
         payerTokenAccount: payerTokenAccountId,
         claimReceipt: claimReceiptId,
         cardinalTokenManager: tokenManager_1.TOKEN_MANAGER_ADDRESS,
-        cardinalPaymentManager: payment_manager_1.PAYMENT_MANAGER_ADDRESS,
+        cardinalPaymentManager: paymentManager_1.PAYMENT_MANAGER_ADDRESS,
         tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
         systemProgram: web3_js_1.SystemProgram.programId,
       })
@@ -683,7 +683,7 @@ const withClaimToken = async (
       systemProgram: web3_js_1.SystemProgram.programId,
     })
     .remainingAccounts(
-      (0, utils_3.getRemainingAccountsForClaim)(
+      (0, utils_2.getRemainingAccountsForClaim)(
         { parsed: tokenManagerData.parsed, pubkey: tokenManagerId },
         recipientTokenAccountId,
         metadata,
@@ -738,7 +738,7 @@ const withUnissueToken = async (transaction, connection, wallet, mintId) => {
         tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(
-        (0, utils_3.getRemainingAccountsForUnissue)(
+        (0, utils_2.getRemainingAccountsForUnissue)(
           tokenManagerId,
           tokenManager.parsed,
           metadata
@@ -829,7 +829,7 @@ const withInvalidate = async (
     true
   );
   const remainingAccounts = await (0,
-  utils_3.withRemainingAccountsForInvalidate)(
+  utils_2.withRemainingAccountsForInvalidate)(
     transaction,
     connection,
     wallet,
@@ -871,7 +871,7 @@ const withInvalidate = async (
     transaction.add(closeIx);
   } else if (
     timeInvalidatorData &&
-    (0, utils_2.shouldTimeInvalidate)(
+    (0, utils_1.shouldTimeInvalidate)(
       tokenManagerData,
       timeInvalidatorData,
       UTCNow
@@ -951,13 +951,13 @@ const withReturn = async (
     true
   );
   const remainingAccountsForReturn = await (0,
-  utils_3.withRemainingAccountsForReturn)(
+  utils_2.withRemainingAccountsForReturn)(
     transaction,
     connection,
     wallet,
     tokenManagerData
   );
-  const transferAccounts = (0, utils_3.getRemainingAccountsForKind)(
+  const transferAccounts = (0, utils_2.getRemainingAccountsForKind)(
     tokenManagerData.parsed.mint,
     tokenManagerData.parsed.kind
   );
@@ -1084,13 +1084,13 @@ const withUse = async (
       true
     );
     const remainingAccountsForReturn = await (0,
-    utils_3.withRemainingAccountsForReturn)(
+    utils_2.withRemainingAccountsForReturn)(
       transaction,
       connection,
       wallet,
       tokenManagerData
     );
-    const remainingAccountsForKind = (0, utils_3.getRemainingAccountsForKind)(
+    const remainingAccountsForKind = (0, utils_2.getRemainingAccountsForKind)(
       mintId,
       tokenManagerData.parsed.kind
     );
@@ -1161,7 +1161,7 @@ const withExtendExpiration = async (
       paymentTokenAccountId,
       feeCollectorTokenAccountId,
       remainingAccounts,
-    ] = await (0, utils_1.withRemainingAccountsForPayment)(
+    ] = await (0, utils_3.withRemainingAccountsForPayment)(
       transaction,
       connection,
       wallet,
@@ -1186,7 +1186,7 @@ const withExtendExpiration = async (
         payer: wallet.publicKey,
         payerTokenAccount: payerTokenAccountId,
         tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
-        cardinalPaymentManager: payment_manager_1.PAYMENT_MANAGER_ADDRESS,
+        cardinalPaymentManager: paymentManager_1.PAYMENT_MANAGER_ADDRESS,
       })
       .remainingAccounts(remainingAccounts)
       .instruction();
@@ -1235,7 +1235,7 @@ const withExtendUsages = async (
       paymentTokenAccountId,
       feeCollectorTokenAccountId,
       remainingAccounts,
-    ] = await (0, utils_1.withRemainingAccountsForPayment)(
+    ] = await (0, utils_3.withRemainingAccountsForPayment)(
       transaction,
       connection,
       wallet,
@@ -1260,7 +1260,7 @@ const withExtendUsages = async (
         payer: wallet.publicKey,
         payerTokenAccount: payerTokenAccountId,
         tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
-        cardinalPaymentManager: payment_manager_1.PAYMENT_MANAGER_ADDRESS,
+        cardinalPaymentManager: paymentManager_1.PAYMENT_MANAGER_ADDRESS,
       })
       .remainingAccounts(remainingAccounts)
       .instruction();
@@ -1375,12 +1375,12 @@ const withTransfer = async (
     wallet.publicKey,
     true
   );
-  const remainingAccountsForKind = (0, utils_3.getRemainingAccountsForKind)(
+  const remainingAccountsForKind = (0, utils_2.getRemainingAccountsForKind)(
     mintId,
     tokenManagerData.parsed.kind
   );
   const remainingAccountsForTransfer = (0,
-  utils_3.getRemainingAccountsForTransfer)(
+  utils_2.getRemainingAccountsForTransfer)(
     tokenManagerData.parsed.transferAuthority,
     tokenManagerId
   );

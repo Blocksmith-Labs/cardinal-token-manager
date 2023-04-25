@@ -1,9 +1,9 @@
 import { emptyWallet } from "@cardinal/common";
-import { DEFAULT_PAYMENT_MANAGER_NAME } from "@cardinal/payment-manager";
-import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import * as CLAIM_APPROVER_TYPES from "../../idl/cardinal_paid_claim_approver";
+import { findPaymentManagerAddress } from "../paymentManager/pda";
+import { DEFAULT_PAYMENT_MANAGER_NAME } from "../paymentManager";
 export const CLAIM_APPROVER_ADDRESS = new PublicKey(
   "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
 );

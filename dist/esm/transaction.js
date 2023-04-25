@@ -15,8 +15,7 @@ import {
   findRulesetId,
   PROGRAM_ADDRESS,
 } from "@cardinal/creator-standard";
-import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
-import { withRemainingAccountsForPayment } from "@cardinal/payment-manager/dist/cjs/utils";
+import { PAYMENT_MANAGER_ADDRESS } from "./programs/paymentManager";
 import {
   Metadata,
   TokenStandard,
@@ -80,6 +79,7 @@ import {
 import { findListingAddress } from "./programs/transferAuthority/pda";
 import { useInvalidatorProgram } from "./programs/useInvalidator";
 import { findUseInvalidatorAddress } from "./programs/useInvalidator/pda";
+import { withRemainingAccountsForPayment } from "./programs/paymentManager/utils";
 /**
  * Main method for issuing any managed token
  * Allows for optional payment, optional usages or expiration and includes a otp for private links

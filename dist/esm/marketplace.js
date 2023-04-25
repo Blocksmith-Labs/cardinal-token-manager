@@ -7,10 +7,6 @@ import {
   withFindOrInitAssociatedTokenAccount,
   withWrapSol,
 } from "@cardinal/common";
-import { PAYMENT_MANAGER_ADDRESS } from "@cardinal/payment-manager";
-import { getPaymentManager } from "@cardinal/payment-manager/dist/cjs/accounts";
-import { findPaymentManagerAddress } from "@cardinal/payment-manager/dist/cjs/pda";
-import { withRemainingAccountsForHandlePaymentWithRoyalties } from "@cardinal/payment-manager/dist/cjs/utils";
 import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -51,6 +47,10 @@ import {
   findTransferAuthorityAddress,
 } from "./programs/transferAuthority/pda";
 import { withIssueToken } from "./transaction";
+import { findPaymentManagerAddress } from "./programs/paymentManager/pda";
+import { getPaymentManager } from "./programs/paymentManager/accounts";
+import { withRemainingAccountsForHandlePaymentWithRoyalties } from "./programs/paymentManager/utils";
+import { PAYMENT_MANAGER_ADDRESS } from "./programs/paymentManager";
 export const withWrapToken = async (
   transaction,
   connection,
