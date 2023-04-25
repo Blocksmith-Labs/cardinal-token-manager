@@ -13,7 +13,7 @@ const TIME_INVALIDATOR_TYPES = tslib_1.__importStar(
   require("../../idl/cardinal_time_invalidator")
 );
 exports.TIME_INVALIDATOR_ADDRESS = new web3_js_1.PublicKey(
-  "tmeEDp1RgoDtZFtx6qod3HkbQmv9LMe36uqKVvsLTDE"
+  "t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK"
 );
 exports.TIME_INVALIDATOR_SEED = "time-invalidator";
 exports.TIME_INVALIDATOR_IDL = TIME_INVALIDATOR_TYPES.IDL;

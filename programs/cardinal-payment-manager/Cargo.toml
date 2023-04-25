@@ -1,0 +1,31 @@
+[package]
+name = "cardinal-payment-manager"
+version = "4.0.0"
+description = "Cardinal payment manager"
+edition = "2021"
+homepage = "https://cardinal.so"
+repository = "https://github.com/cardinal-labs/cardinal-payment-manager/"
+authors = ["The Cardinal Team <info@cardinal.so>"]
+license = "AGPL-3.0"
+keywords = ["solana", "cardinal", "payment-manager"]
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "cardinal_payment_manager"
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.26.0", features = ["init-if-needed"] }
+anchor-spl = "0.26.0"
+spl-associated-token-account = "1.1.2"
+mpl-token-metadata = { version = "1.8.0", features = ["no-entrypoint"] }
+spl-token = { version = "3.3.0", features = ["no-entrypoint"] }
+solana-program = "1.10.29"
+
+[dev-dependencies]
+proptest = { version = "1.0" }

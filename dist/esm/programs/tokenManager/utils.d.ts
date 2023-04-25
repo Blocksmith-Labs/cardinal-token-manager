@@ -3,7 +3,7 @@ import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import type { AccountMeta, Connection } from "@solana/web3.js";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import { TokenManagerData } from ".";
+import type { TokenManagerData } from ".";
 import { TokenManagerKind } from ".";
 export declare const getRemainingAccountsForKind: (mintId: PublicKey, tokenManagerKind: TokenManagerKind) => AccountMeta[];
 export declare const getRemainingAccountsForUnissue: (tokenManagerId: PublicKey, tokenManagerData: TokenManagerData, metadata: Metadata | null) => AccountMeta[];

@@ -19,12 +19,11 @@ const mpl_token_metadata_1 = require("@metaplex-foundation/mpl-token-metadata");
 const spl_token_1 = require("@solana/spl-token");
 const web3_js_1 = require("@solana/web3.js");
 const _1 = require(".");
-const _2 = require(".");
 const pda_1 = require("./pda");
 const getRemainingAccountsForKind = (mintId, tokenManagerKind) => {
   if (
-    tokenManagerKind === _2.TokenManagerKind.Managed ||
-    tokenManagerKind === _2.TokenManagerKind.Permissioned
+    tokenManagerKind === _1.TokenManagerKind.Managed ||
+    tokenManagerKind === _1.TokenManagerKind.Permissioned
   ) {
     return [
       {
@@ -33,7 +32,7 @@ const getRemainingAccountsForKind = (mintId, tokenManagerKind) => {
         isWritable: true,
       },
     ];
-  } else if (tokenManagerKind === _2.TokenManagerKind.Edition) {
+  } else if (tokenManagerKind === _1.TokenManagerKind.Edition) {
     return [
       {
         pubkey: (0, common_1.findMintEditionId)(mintId),
@@ -59,7 +58,7 @@ const getRemainingAccountsForUnissue = (
   var _a, _b, _c;
   const remainingAccounts = [];
   if (
-    tokenManagerData.kind !== _2.TokenManagerKind.Programmable &&
+    tokenManagerData.kind !== _1.TokenManagerKind.Programmable &&
     (metadata === null || metadata === void 0
       ? void 0
       : metadata.tokenStandard) ===
@@ -135,7 +134,7 @@ const getRemainingAccountsForInvalidate = async (
   const tokenManagerData = (0, common_1.decodeIdlAccount)(
     tokenManagerInfo,
     "tokenManager",
-    _2.TOKEN_MANAGER_IDL
+    _1.TOKEN_MANAGER_IDL
   );
   if (!metadataInfo) throw "Metadata not found";
   const metadata = mpl_token_metadata_1.Metadata.deserialize(
@@ -168,21 +167,21 @@ const withRemainingAccountsForInvalidate = async (
   var _a, _b, _c, _d;
   const remainingAccounts = [];
   if (
-    tokenManagerData.parsed.kind !== _2.TokenManagerKind.Programmable &&
+    tokenManagerData.parsed.kind !== _1.TokenManagerKind.Programmable &&
     (metadata === null || metadata === void 0
       ? void 0
       : metadata.tokenStandard) ===
       mpl_token_metadata_1.TokenStandard.ProgrammableNonFungible
   ) {
     // update kind
-    tokenManagerData.parsed.kind = _2.TokenManagerKind.Programmable;
+    tokenManagerData.parsed.kind = _1.TokenManagerKind.Programmable;
     remainingAccounts.push({
       pubkey: (0, common_1.findMintMetadataId)(mintId),
       isSigner: false,
       isWritable: false,
     });
   }
-  if (tokenManagerData.parsed.state === _2.TokenManagerState.Claimed) {
+  if (tokenManagerData.parsed.state === _1.TokenManagerState.Claimed) {
     remainingAccounts.push(
       ...(0, exports.getRemainingAccountsForKind)(
         mintId,
@@ -191,9 +190,9 @@ const withRemainingAccountsForInvalidate = async (
     );
   }
   if (
-    tokenManagerData.parsed.kind === _2.TokenManagerKind.Programmable &&
-    (tokenManagerData.parsed.invalidationType === _2.InvalidationType.Release ||
-      tokenManagerData.parsed.invalidationType === _2.InvalidationType.Reissue)
+    tokenManagerData.parsed.kind === _1.TokenManagerKind.Programmable &&
+    (tokenManagerData.parsed.invalidationType === _1.InvalidationType.Release ||
+      tokenManagerData.parsed.invalidationType === _1.InvalidationType.Reissue)
   ) {
     if (
       !((_a =
@@ -260,8 +259,8 @@ const withRemainingAccountsForReturn = async (
     state,
   } = tokenManagerData.parsed;
   if (
-    invalidationType === _2.InvalidationType.Vest &&
-    state === _2.TokenManagerState.Issued
+    invalidationType === _1.InvalidationType.Vest &&
+    state === _1.TokenManagerState.Issued
   ) {
     if (!claimApprover) throw "Claim approver must be set";
     const claimApproverTokenAccountId = await (0,
@@ -281,10 +280,10 @@ const withRemainingAccountsForReturn = async (
       },
     ];
   } else if (
-    invalidationType === _2.InvalidationType.Return ||
-    state === _2.TokenManagerState.Issued
+    invalidationType === _1.InvalidationType.Return ||
+    state === _1.TokenManagerState.Issued
   ) {
-    if (kind === _2.TokenManagerKind.Programmable || rulesetId) {
+    if (kind === _1.TokenManagerKind.Programmable || rulesetId) {
       // if (!rulesetId) throw "Ruleset not specified";
       if (!recipientTokenAccountOwnerId)
         throw "Recipient token account owner not specified";
@@ -515,7 +514,7 @@ const remainingAccountForProgrammable = (
       pubkey:
         rulesetId !== null && rulesetId !== void 0
           ? rulesetId
-          : _1.TOKEN_MANAGER_ADDRESS,
+          : common_1.METADATA_PROGRAM_ID,
       isSigner: false,
       isWritable: false,
     },
@@ -618,15 +617,15 @@ const getRemainingAccountsForIssue = (
   tokenManagerTokenAccountId,
   rulesetId
 ) => {
-  if (tokenManagerKind === _2.TokenManagerKind.Permissioned) {
+  if (tokenManagerKind === _1.TokenManagerKind.Permissioned) {
     return [
       {
-        pubkey: _2.CRANK_KEY,
+        pubkey: _1.CRANK_KEY,
         isSigner: false,
         isWritable: true,
       },
     ];
-  } else if (tokenManagerKind === _2.TokenManagerKind.Programmable) {
+  } else if (tokenManagerKind === _1.TokenManagerKind.Programmable) {
     if (!rulesetId) throw "Ruleset not specified";
     return (0, exports.remainingAccountForProgrammable)(
       mintId,
@@ -648,14 +647,14 @@ const getRemainingAccountsForClaim = (
   var _a, _b;
   const remainingAccounts = [];
   if (
-    tokenManagerData.parsed.kind !== _2.TokenManagerKind.Programmable &&
+    tokenManagerData.parsed.kind !== _1.TokenManagerKind.Programmable &&
     (metadata === null || metadata === void 0
       ? void 0
       : metadata.tokenStandard) ===
       mpl_token_metadata_1.TokenStandard.ProgrammableNonFungible
   ) {
     // update kind
-    tokenManagerData.parsed.kind = _2.TokenManagerKind.Programmable;
+    tokenManagerData.parsed.kind = _1.TokenManagerKind.Programmable;
     remainingAccounts.push({
       pubkey: (0, common_1.findMintMetadataId)(tokenManagerData.parsed.mint),
       isSigner: false,
@@ -663,8 +662,8 @@ const getRemainingAccountsForClaim = (
     });
   }
   if (
-    tokenManagerData.parsed.kind === _2.TokenManagerKind.Managed ||
-    tokenManagerData.parsed.kind === _2.TokenManagerKind.Permissioned
+    tokenManagerData.parsed.kind === _1.TokenManagerKind.Managed ||
+    tokenManagerData.parsed.kind === _1.TokenManagerKind.Permissioned
   ) {
     const mintManagerId = (0, pda_1.findMintManagerId)(
       tokenManagerData.parsed.mint
@@ -674,7 +673,7 @@ const getRemainingAccountsForClaim = (
       isSigner: false,
       isWritable: true,
     });
-  } else if (tokenManagerData.parsed.kind === _2.TokenManagerKind.Edition) {
+  } else if (tokenManagerData.parsed.kind === _1.TokenManagerKind.Edition) {
     const editionId = (0, common_1.findMintEditionId)(
       tokenManagerData.parsed.mint
     );
@@ -691,7 +690,7 @@ const getRemainingAccountsForClaim = (
       }
     );
   } else if (
-    tokenManagerData.parsed.kind === _2.TokenManagerKind.Programmable
+    tokenManagerData.parsed.kind === _1.TokenManagerKind.Programmable
   ) {
     if (
       !((_a =

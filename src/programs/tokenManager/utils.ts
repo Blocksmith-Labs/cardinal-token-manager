@@ -33,7 +33,7 @@ import type { TokenManagerData } from ".";
 import {
   CRANK_KEY,
   InvalidationType,
-  TOKEN_MANAGER_ADDRESS,
+  // TOKEN_MANAGER_ADDRESS,
   TOKEN_MANAGER_IDL,
   TokenManagerKind,
   TokenManagerState,
@@ -481,7 +481,7 @@ export const remainingAccountForProgrammable = (
       isWritable: false,
     },
     {
-      pubkey: rulesetId ?? TOKEN_MANAGER_ADDRESS,
+      pubkey: rulesetId ?? METADATA_PROGRAM_ID,
       isSigner: false,
       isWritable: false,
     },

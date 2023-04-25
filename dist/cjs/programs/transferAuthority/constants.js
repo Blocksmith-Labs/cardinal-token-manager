@@ -18,7 +18,7 @@ const TRANSFER_AUTHORITY_TYPES = tslib_1.__importStar(
   require("../../idl/cardinal_transfer_authority")
 );
 exports.TRANSFER_AUTHORITY_ADDRESS = new web3_js_1.PublicKey(
-  "trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW"
+  "t7UND4Dhg8yoykPAr1WjwfZhfHDwXih5RY8voM47FMS"
 );
 exports.TRANSFER_AUTHORITY_SEED = "transfer-authority";
 exports.MARKETPLACE_SEED = "marketplace";

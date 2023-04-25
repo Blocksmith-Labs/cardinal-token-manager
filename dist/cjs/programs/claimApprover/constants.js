@@ -16,7 +16,7 @@ const CLAIM_APPROVER_TYPES = tslib_1.__importStar(
   require("../../idl/cardinal_paid_claim_approver")
 );
 exports.CLAIM_APPROVER_ADDRESS = new web3_js_1.PublicKey(
-  "pcaBwhJ1YHp7UDA7HASpQsRUmUNwzgYaLQto2kSj1fR"
+  "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
 );
 exports.CLAIM_APPROVER_SEED = "paid-claim-approver";
 exports.CLAIM_APPROVER_IDL = CLAIM_APPROVER_TYPES.IDL;

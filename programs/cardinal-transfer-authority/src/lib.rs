@@ -5,7 +5,7 @@ pub mod state;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-declare_id!("trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW");
+declare_id!("t7UND4Dhg8yoykPAr1WjwfZhfHDwXih5RY8voM47FMS");
 
 #[program]
 pub mod cardinal_transfer_authority {

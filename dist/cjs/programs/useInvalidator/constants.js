@@ -13,7 +13,7 @@ const USE_INVALIDATOR_TYPES = tslib_1.__importStar(
   require("../../idl/cardinal_use_invalidator")
 );
 exports.USE_INVALIDATOR_ADDRESS = new web3_js_1.PublicKey(
-  "useZ65tbyvWpdYCLDJaegGK34Lnsi8S3jZdwx8122qp"
+  "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
 );
 exports.USE_INVALIDATOR_SEED = "use-invalidator";
 exports.USE_INVALIDATOR_IDL = USE_INVALIDATOR_TYPES.IDL;

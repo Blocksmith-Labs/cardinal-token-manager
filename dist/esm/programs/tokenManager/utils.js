@@ -24,10 +24,10 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
-import { TOKEN_MANAGER_ADDRESS } from ".";
 import {
   CRANK_KEY,
   InvalidationType,
+  // TOKEN_MANAGER_ADDRESS,
   TOKEN_MANAGER_IDL,
   TokenManagerKind,
   TokenManagerState,
@@ -508,7 +508,7 @@ export const remainingAccountForProgrammable = (
       pubkey:
         rulesetId !== null && rulesetId !== void 0
           ? rulesetId
-          : TOKEN_MANAGER_ADDRESS,
+          : METADATA_PROGRAM_ID,
       isSigner: false,
       isWritable: false,
     },

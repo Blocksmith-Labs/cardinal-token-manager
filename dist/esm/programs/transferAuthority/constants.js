@@ -3,7 +3,7 @@ import { AnchorProvider, Program } from "@project-serum/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import * as TRANSFER_AUTHORITY_TYPES from "../../idl/cardinal_transfer_authority";
 export const TRANSFER_AUTHORITY_ADDRESS = new PublicKey(
-  "trsMRg3GzFSNgC3tdhbuKUES8YvGtUBbzp5fjxLtVQW"
+  "t7UND4Dhg8yoykPAr1WjwfZhfHDwXih5RY8voM47FMS"
 );
 export const TRANSFER_AUTHORITY_SEED = "transfer-authority";
 export const MARKETPLACE_SEED = "marketplace";

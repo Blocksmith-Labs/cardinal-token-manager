@@ -22,7 +22,7 @@ const TOKEN_MANAGER_TYPES = tslib_1.__importStar(
   require("../../idl/cardinal_token_manager")
 );
 exports.TOKEN_MANAGER_ADDRESS = new web3_js_1.PublicKey(
-  "mgr99QFMYByTqGPWmNqunV7vBLmWWXdSrHUfV8Jf3JM"
+  "3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k"
 );
 exports.MINT_COUNTER_SEED = "mint-counter";
 exports.MINT_MANAGER_SEED = "mint-manager";
