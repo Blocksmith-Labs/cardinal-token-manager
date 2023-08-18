@@ -1,4 +1,4 @@
-export type CardinalTimeInvalidator = {
+export declare type CardinalTimeInvalidator = {
     version: "4.4.0";
     name: "cardinal_time_invalidator";
     instructions: [

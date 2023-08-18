@@ -1,4 +1,4 @@
-export type CardinalUseInvalidator = {
+export declare type CardinalUseInvalidator = {
     version: "4.4.0";
     name: "cardinal_use_invalidator";
     instructions: [

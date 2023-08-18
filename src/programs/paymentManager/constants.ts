@@ -11,7 +11,7 @@ export const BASIS_POINTS_DIVISOR = 10000;
 export const DEFAULT_BUY_SIDE_FEE_SHARE = 50;
 
 export const PAYMENT_MANAGER_ADDRESS = new PublicKey(
-  "pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV"
+  "DRxWY9ThgdfARwKVkUC7RYFVCxGrKdAUErHtkjDAaFAB"
 );
 
 export const CRANK_KEY = new PublicKey(

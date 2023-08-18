@@ -1,4 +1,4 @@
-export type CardinalPaymentManager = {
+export declare type CardinalPaymentManager = {
     version: "4.0.0";
     name: "cardinal_payment_manager";
     instructions: [

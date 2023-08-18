@@ -6,9 +6,9 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-cardinal_token_manager = "3yMZ4nfMvZhcgAcvmiUZoHVW4eX3opFhHPCf1wX1Be8k"
-cardinal_paid_claim_approver = "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
-cardinal_time_invalidator = "t3JAC837E6YLkJSdz3UZLUZVhLBShZh727c9TRbwUKK"
-cardinal_use_invalidator = "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
-cardinal_payment_manager = 'pmBbdddvcssmfNgNfu8vgULnhTAcnrn841K5QVhh5VV'
-cardinal_transfer_authority = 't7UND4Dhg8yoykPAr1WjwfZhfHDwXih5RY8voM47FMS'
+cardinal_token_manager = "9o2MLDQPyUDwuV81zcfn7dHx6ZS4mm2U9w3QoxUHB8U1"
+cardinal_paid_claim_approver = "4ZtHLgmEHpsNejeduUJwEmpXLv1vZMcoFbJUEus9BGL8"
+cardinal_time_invalidator = "GLm4LAnymyxCcwuu1uKtBf5dCRYbdNuXdamPbifwXdRv"
+cardinal_use_invalidator = "B8gTHHQmz2UsvXxk4NqfuKgLLapKePt7c33zwW4NNU5M"
+cardinal_payment_manager = 'DRxWY9ThgdfARwKVkUC7RYFVCxGrKdAUErHtkjDAaFAB'
+cardinal_transfer_authority = 'A1eisbUwy27tgVzL8xH9YY92HWqUZZEarFgbL4WVoEQz'

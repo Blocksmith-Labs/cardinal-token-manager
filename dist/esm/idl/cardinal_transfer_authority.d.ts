@@ -1,4 +1,4 @@
-export type CardinalTransferAuthority = {
+export declare type CardinalTransferAuthority = {
     version: "4.4.0";
     name: "cardinal_transfer_authority";
     instructions: [

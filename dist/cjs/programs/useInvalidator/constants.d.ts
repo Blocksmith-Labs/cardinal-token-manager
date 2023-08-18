@@ -7,9 +7,9 @@ import * as USE_INVALIDATOR_TYPES from "../../idl/cardinal_use_invalidator";
 export declare const USE_INVALIDATOR_ADDRESS: PublicKey;
 export declare const USE_INVALIDATOR_SEED = "use-invalidator";
 export declare const USE_INVALIDATOR_IDL: USE_INVALIDATOR_TYPES.CardinalUseInvalidator;
-export type USE_INVALIDATOR_PROGRAM = USE_INVALIDATOR_TYPES.CardinalUseInvalidator;
-export type UseInvalidatorData = ParsedIdlAccountData<"useInvalidator", USE_INVALIDATOR_PROGRAM>;
-export type UseInvalidationParams = {
+export declare type USE_INVALIDATOR_PROGRAM = USE_INVALIDATOR_TYPES.CardinalUseInvalidator;
+export declare type UseInvalidatorData = ParsedIdlAccountData<"useInvalidator", USE_INVALIDATOR_PROGRAM>;
+export declare type UseInvalidationParams = {
     collector?: PublicKey;
     paymentManager?: PublicKey;
     totalUsages?: number;

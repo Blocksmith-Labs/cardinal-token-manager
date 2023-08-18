@@ -8,7 +8,7 @@ import type { TimeInvalidationParams } from "./programs/timeInvalidator";
 import type { TokenManagerData } from "./programs/tokenManager";
 import { InvalidationType, TokenManagerKind } from "./programs/tokenManager";
 import type { UseInvalidationParams } from "./programs/useInvalidator";
-export type IssueParameters = {
+export declare type IssueParameters = {
     claimPayment?: ClaimApproverParams;
     timeInvalidation?: TimeInvalidationParams;
     useInvalidation?: UseInvalidationParams;

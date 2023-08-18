@@ -9,13 +9,7 @@ const constants_1 = require("./constants");
  * @returns
  */
 const findClaimApproverAddress = (tokenManagerId) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(constants_1.CLAIM_APPROVER_SEED),
-      tokenManagerId.toBuffer(),
-    ],
-    constants_1.CLAIM_APPROVER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(constants_1.CLAIM_APPROVER_SEED), tokenManagerId.toBuffer()], constants_1.CLAIM_APPROVER_ADDRESS)[0];
 };
 exports.findClaimApproverAddress = findClaimApproverAddress;
 //# sourceMappingURL=pda.js.map

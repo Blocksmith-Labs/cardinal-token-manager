@@ -8,7 +8,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import * as USE_INVALIDATOR_TYPES from "../../idl/cardinal_use_invalidator";
 
 export const USE_INVALIDATOR_ADDRESS = new PublicKey(
-  "t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE"
+  "B8gTHHQmz2UsvXxk4NqfuKgLLapKePt7c33zwW4NNU5M"
 );
 
 export const USE_INVALIDATOR_SEED = "use-invalidator";

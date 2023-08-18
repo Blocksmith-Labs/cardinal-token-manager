@@ -7,9 +7,9 @@ import * as TIME_INVALIDATOR_TYPES from "../../idl/cardinal_time_invalidator";
 export declare const TIME_INVALIDATOR_ADDRESS: PublicKey;
 export declare const TIME_INVALIDATOR_SEED = "time-invalidator";
 export declare const TIME_INVALIDATOR_IDL: TIME_INVALIDATOR_TYPES.CardinalTimeInvalidator;
-export type TIME_INVALIDATOR_PROGRAM = TIME_INVALIDATOR_TYPES.CardinalTimeInvalidator;
-export type TimeInvalidatorData = ParsedIdlAccountData<"timeInvalidator", TIME_INVALIDATOR_PROGRAM>;
-export type TimeInvalidationParams = {
+export declare type TIME_INVALIDATOR_PROGRAM = TIME_INVALIDATOR_TYPES.CardinalTimeInvalidator;
+export declare type TimeInvalidatorData = ParsedIdlAccountData<"timeInvalidator", TIME_INVALIDATOR_PROGRAM>;
+export declare type TimeInvalidationParams = {
     collector?: PublicKey;
     paymentManager?: PublicKey;
     durationSeconds?: number;

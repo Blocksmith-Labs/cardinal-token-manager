@@ -10,12 +10,12 @@ export declare const MARKETPLACE_SEED = "marketplace";
 export declare const LISTING_SEED = "listing";
 export declare const TRANSFER_SEED = "transfer";
 export declare const TRANSFER_AUTHORITY_IDL: TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority;
-export type TRANSFER_AUTHORITY_PROGRAM = TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority;
+export declare type TRANSFER_AUTHORITY_PROGRAM = TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority;
 export declare const WSOL_MINT: PublicKey;
 export declare const DEFAULT_TRANSFER_AUTHORITY_NAME = "global";
-export type TransferAuthorityData = ParsedIdlAccountData<"transferAuthority", TRANSFER_AUTHORITY_PROGRAM>;
-export type MarketplaceData = ParsedIdlAccountData<"marketplace", TRANSFER_AUTHORITY_PROGRAM>;
-export type ListingData = ParsedIdlAccountData<"listing", TRANSFER_AUTHORITY_PROGRAM>;
-export type TransferData = ParsedIdlAccountData<"transfer", TRANSFER_AUTHORITY_PROGRAM>;
+export declare type TransferAuthorityData = ParsedIdlAccountData<"transferAuthority", TRANSFER_AUTHORITY_PROGRAM>;
+export declare type MarketplaceData = ParsedIdlAccountData<"marketplace", TRANSFER_AUTHORITY_PROGRAM>;
+export declare type ListingData = ParsedIdlAccountData<"listing", TRANSFER_AUTHORITY_PROGRAM>;
+export declare type TransferData = ParsedIdlAccountData<"transfer", TRANSFER_AUTHORITY_PROGRAM>;
 export declare const transferAuthorityProgram: (connection: Connection, wallet?: Wallet, confirmOptions?: ConfirmOptions) => Program<TRANSFER_AUTHORITY_TYPES.CardinalTransferAuthority>;
 //# sourceMappingURL=constants.d.ts.map

@@ -8,7 +8,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import * as TRANSFER_AUTHORITY_TYPES from "../../idl/cardinal_transfer_authority";
 
 export const TRANSFER_AUTHORITY_ADDRESS = new PublicKey(
-  "t7UND4Dhg8yoykPAr1WjwfZhfHDwXih5RY8voM47FMS"
+  "A1eisbUwy27tgVzL8xH9YY92HWqUZZEarFgbL4WVoEQz"
 );
 
 export const TRANSFER_AUTHORITY_SEED = "transfer-authority";

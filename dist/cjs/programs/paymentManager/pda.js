@@ -9,13 +9,10 @@ const _1 = require(".");
  * @returns
  */
 const findPaymentManagerAddress = (name) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(_1.PAYMENT_MANAGER_SEED),
-      anchor_1.utils.bytes.utf8.encode(name),
-    ],
-    _1.PAYMENT_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([
+        anchor_1.utils.bytes.utf8.encode(_1.PAYMENT_MANAGER_SEED),
+        anchor_1.utils.bytes.utf8.encode(name),
+    ], _1.PAYMENT_MANAGER_ADDRESS)[0];
 };
 exports.findPaymentManagerAddress = findPaymentManagerAddress;
 //# sourceMappingURL=pda.js.map

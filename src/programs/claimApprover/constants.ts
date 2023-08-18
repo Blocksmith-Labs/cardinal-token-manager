@@ -10,7 +10,7 @@ import { DEFAULT_PAYMENT_MANAGER_NAME } from "../paymentManager";
 import { findPaymentManagerAddress } from "../paymentManager/pda";
 
 export const CLAIM_APPROVER_ADDRESS = new PublicKey(
-  "4MD5VTfXNDN7Z4qzJ5Puet6ZCRgqrfnc8mzosNkviRAW"
+  "4ZtHLgmEHpsNejeduUJwEmpXLv1vZMcoFbJUEus9BGL8"
 );
 
 export const CLAIM_APPROVER_SEED = "paid-claim-approver";

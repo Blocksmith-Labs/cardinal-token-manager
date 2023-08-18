@@ -6,12 +6,9 @@ import { PAYMENT_MANAGER_ADDRESS, PAYMENT_MANAGER_SEED } from ".";
  * @returns
  */
 export const findPaymentManagerAddress = (name) => {
-  return PublicKey.findProgramAddressSync(
-    [
-      utils.bytes.utf8.encode(PAYMENT_MANAGER_SEED),
-      utils.bytes.utf8.encode(name),
-    ],
-    PAYMENT_MANAGER_ADDRESS
-  )[0];
+    return PublicKey.findProgramAddressSync([
+        utils.bytes.utf8.encode(PAYMENT_MANAGER_SEED),
+        utils.bytes.utf8.encode(name),
+    ], PAYMENT_MANAGER_ADDRESS)[0];
 };
 //# sourceMappingURL=pda.js.map

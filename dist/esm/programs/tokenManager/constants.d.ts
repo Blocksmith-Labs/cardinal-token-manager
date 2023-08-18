@@ -12,11 +12,11 @@ export declare const CLAIM_RECEIPT_SEED = "claim-receipt";
 export declare const TOKEN_MANAGER_SEED = "token-manager";
 export declare const RECEIPT_MINT_MANAGER_SEED = "receipt-mint-manager";
 export declare const TOKEN_MANAGER_IDL: TOKEN_MANAGER_TYPES.CardinalTokenManager;
-export type TOKEN_MANAGER_PROGRAM = TOKEN_MANAGER_TYPES.CardinalTokenManager;
-export type TokenManagerData = ParsedIdlAccountData<"tokenManager", TOKEN_MANAGER_PROGRAM>;
-export type MintManagerData = ParsedIdlAccountData<"mintManager", TOKEN_MANAGER_PROGRAM>;
-export type MintCounterData = ParsedIdlAccountData<"mintCounter", TOKEN_MANAGER_PROGRAM>;
-export type TransferReceiptData = ParsedIdlAccountData<"transferReceipt", TOKEN_MANAGER_PROGRAM>;
+export declare type TOKEN_MANAGER_PROGRAM = TOKEN_MANAGER_TYPES.CardinalTokenManager;
+export declare type TokenManagerData = ParsedIdlAccountData<"tokenManager", TOKEN_MANAGER_PROGRAM>;
+export declare type MintManagerData = ParsedIdlAccountData<"mintManager", TOKEN_MANAGER_PROGRAM>;
+export declare type MintCounterData = ParsedIdlAccountData<"mintCounter", TOKEN_MANAGER_PROGRAM>;
+export declare type TransferReceiptData = ParsedIdlAccountData<"transferReceipt", TOKEN_MANAGER_PROGRAM>;
 export declare enum TokenManagerKind {
     Managed = 1,
     Unmanaged = 2,

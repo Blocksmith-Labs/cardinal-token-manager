@@ -11,7 +11,7 @@ export declare const CRANK_KEY: PublicKey;
 export declare const PAYMENT_MANAGER_SEED = "payment-manager";
 export declare const DEFAULT_PAYMENT_MANAGER_NAME = "cardinal";
 export declare const PAYMENT_MANAGER_IDL: PAYMENT_MANAGER_TYPES.CardinalPaymentManager;
-export type PAYMENT_MANAGER_PROGRAM = PAYMENT_MANAGER_TYPES.CardinalPaymentManager;
-export type PaymentManagerData = ParsedIdlAccountData<"paymentManager", PAYMENT_MANAGER_PROGRAM>;
+export declare type PAYMENT_MANAGER_PROGRAM = PAYMENT_MANAGER_TYPES.CardinalPaymentManager;
+export declare type PaymentManagerData = ParsedIdlAccountData<"paymentManager", PAYMENT_MANAGER_PROGRAM>;
 export declare const paymentManagerProgram: (connection: Connection, wallet?: Wallet, confirmOptions?: ConfirmOptions) => Program<PAYMENT_MANAGER_TYPES.CardinalPaymentManager>;
 //# sourceMappingURL=constants.d.ts.map

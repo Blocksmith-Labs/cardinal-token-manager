@@ -1,14 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findReceiptMintManagerId =
-  exports.findMintCounterId =
-  exports.findMintManagerId =
-  exports.findTransferReceiptId =
-  exports.findClaimReceiptId =
-  exports.findTokenManagerAddress =
-  exports.tokenManagerAddressFromMint =
-  exports.tryTokenManagerAddressFromMint =
-    void 0;
+exports.findReceiptMintManagerId = exports.findMintCounterId = exports.findMintManagerId = exports.findTransferReceiptId = exports.findClaimReceiptId = exports.findTokenManagerAddress = exports.tokenManagerAddressFromMint = exports.tryTokenManagerAddressFromMint = void 0;
 const anchor_1 = require("@project-serum/anchor");
 const web3_js_1 = require("@solana/web3.js");
 const _1 = require(".");
@@ -18,12 +10,13 @@ const constants_1 = require("./constants");
  * @returns
  */
 const tryTokenManagerAddressFromMint = (mint) => {
-  try {
-    const tokenManagerId = (0, exports.tokenManagerAddressFromMint)(mint);
-    return tokenManagerId;
-  } catch (e) {
-    return null;
-  }
+    try {
+        const tokenManagerId = (0, exports.tokenManagerAddressFromMint)(mint);
+        return tokenManagerId;
+    }
+    catch (e) {
+        return null;
+    }
 };
 exports.tryTokenManagerAddressFromMint = tryTokenManagerAddressFromMint;
 /**
@@ -31,8 +24,8 @@ exports.tryTokenManagerAddressFromMint = tryTokenManagerAddressFromMint;
  * @returns
  */
 const tokenManagerAddressFromMint = (mint) => {
-  const tokenManagerId = (0, exports.findTokenManagerAddress)(mint);
-  return tokenManagerId;
+    const tokenManagerId = (0, exports.findTokenManagerAddress)(mint);
+    return tokenManagerId;
 };
 exports.tokenManagerAddressFromMint = tokenManagerAddressFromMint;
 /**
@@ -40,13 +33,7 @@ exports.tokenManagerAddressFromMint = tokenManagerAddressFromMint;
  * @returns
  */
 const findTokenManagerAddress = (mint) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(constants_1.TOKEN_MANAGER_SEED),
-      mint.toBuffer(),
-    ],
-    constants_1.TOKEN_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(constants_1.TOKEN_MANAGER_SEED), mint.toBuffer()], constants_1.TOKEN_MANAGER_ADDRESS)[0];
 };
 exports.findTokenManagerAddress = findTokenManagerAddress;
 /**
@@ -54,14 +41,11 @@ exports.findTokenManagerAddress = findTokenManagerAddress;
  * @returns
  */
 const findClaimReceiptId = (tokenManagerId, recipientKey) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(constants_1.CLAIM_RECEIPT_SEED),
-      tokenManagerId.toBuffer(),
-      recipientKey.toBuffer(),
-    ],
-    constants_1.TOKEN_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([
+        anchor_1.utils.bytes.utf8.encode(constants_1.CLAIM_RECEIPT_SEED),
+        tokenManagerId.toBuffer(),
+        recipientKey.toBuffer(),
+    ], constants_1.TOKEN_MANAGER_ADDRESS)[0];
 };
 exports.findClaimReceiptId = findClaimReceiptId;
 /**
@@ -69,13 +53,7 @@ exports.findClaimReceiptId = findClaimReceiptId;
  * @returns
  */
 const findTransferReceiptId = (tokenManagerId) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(_1.TRANSFER_RECEIPT_SEED),
-      tokenManagerId.toBuffer(),
-    ],
-    constants_1.TOKEN_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(_1.TRANSFER_RECEIPT_SEED), tokenManagerId.toBuffer()], constants_1.TOKEN_MANAGER_ADDRESS)[0];
 };
 exports.findTransferReceiptId = findTransferReceiptId;
 /**
@@ -83,10 +61,7 @@ exports.findTransferReceiptId = findTransferReceiptId;
  * @returns
  */
 const findMintManagerId = (mintId) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [anchor_1.utils.bytes.utf8.encode(_1.MINT_MANAGER_SEED), mintId.toBuffer()],
-    constants_1.TOKEN_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(_1.MINT_MANAGER_SEED), mintId.toBuffer()], constants_1.TOKEN_MANAGER_ADDRESS)[0];
 };
 exports.findMintManagerId = findMintManagerId;
 /**
@@ -94,10 +69,7 @@ exports.findMintManagerId = findMintManagerId;
  * @returns
  */
 const findMintCounterId = (mintId) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [anchor_1.utils.bytes.utf8.encode(_1.MINT_COUNTER_SEED), mintId.toBuffer()],
-    constants_1.TOKEN_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(_1.MINT_COUNTER_SEED), mintId.toBuffer()], constants_1.TOKEN_MANAGER_ADDRESS)[0];
 };
 exports.findMintCounterId = findMintCounterId;
 /**
@@ -105,10 +77,7 @@ exports.findMintCounterId = findMintCounterId;
  * @returns
  */
 const findReceiptMintManagerId = () => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [anchor_1.utils.bytes.utf8.encode(_1.RECEIPT_MINT_MANAGER_SEED)],
-    constants_1.TOKEN_MANAGER_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(_1.RECEIPT_MINT_MANAGER_SEED)], constants_1.TOKEN_MANAGER_ADDRESS)[0];
 };
 exports.findReceiptMintManagerId = findReceiptMintManagerId;
 //# sourceMappingURL=pda.js.map

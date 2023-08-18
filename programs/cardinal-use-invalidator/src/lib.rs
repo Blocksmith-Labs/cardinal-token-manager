@@ -5,7 +5,7 @@ pub mod state;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-declare_id!("t5DEoCV1arWsMSCurX19CpFASKVyqrvvvDmFvWiGLoE");
+declare_id!("B8gTHHQmz2UsvXxk4NqfuKgLLapKePt7c33zwW4NNU5M");
 
 #[program]
 pub mod cardinal_use_invalidator {

@@ -9,13 +9,7 @@ const constants_1 = require("./constants");
  * @returns
  */
 const findUseInvalidatorAddress = (tokenManagerId) => {
-  return web3_js_1.PublicKey.findProgramAddressSync(
-    [
-      anchor_1.utils.bytes.utf8.encode(constants_1.USE_INVALIDATOR_SEED),
-      tokenManagerId.toBuffer(),
-    ],
-    constants_1.USE_INVALIDATOR_ADDRESS
-  )[0];
+    return web3_js_1.PublicKey.findProgramAddressSync([anchor_1.utils.bytes.utf8.encode(constants_1.USE_INVALIDATOR_SEED), tokenManagerId.toBuffer()], constants_1.USE_INVALIDATOR_ADDRESS)[0];
 };
 exports.findUseInvalidatorAddress = findUseInvalidatorAddress;
 //# sourceMappingURL=pda.js.map

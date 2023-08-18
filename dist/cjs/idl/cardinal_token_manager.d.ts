@@ -1,4 +1,4 @@
-export type CardinalTokenManager = {
+export declare type CardinalTokenManager = {
     version: "4.4.0";
     name: "cardinal_token_manager";
     instructions: [
